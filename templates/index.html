@@ -1,0 +1,697 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>金融产品推荐系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            margin-bottom: 30px;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title i {
+            color: #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+
+        .input-control {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            background-color: #fff;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        select.input-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 15px;
+        }
+
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+        }
+
+        .status-warning {
+            background: rgba(255, 193, 7, 0.15);
+            color: #b8860b;
+        }
+
+        .status-success {
+            background: rgba(76, 175, 80, 0.15);
+            color: #2e7d32;
+        }
+
+        .status-info {
+            background: rgba(33, 150, 243, 0.15);
+            color: #1565c0;
+        }
+
+        .training-summary {
+            background: #f6f8ff;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+
+        .training-summary ul {
+            margin-top: 10px;
+            padding-left: 20px;
+            color: #555;
+        }
+
+        .results {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            margin-top: 30px;
+            display: none;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .results-header h2 {
+            color: #2c3e50;
+            font-size: 1.8rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #7f8c8d;
+            transition: color 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: #e74c3c;
+        }
+
+        .algorithm-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+        }
+
+        .algorithm-name {
+            font-size: 1.3rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .product {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 1px solid #eee;
+        }
+
+        .product:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .product h4 {
+            color: #2c3e50;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .product-info {
+            margin-bottom: 15px;
+        }
+
+        .product-info p {
+            margin: 8px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #7f8c8d;
+        }
+
+        .info-value {
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid #667eea;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #c62828;
+        }
+
+        footer {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 30px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .product-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card,
+            .results {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-chart-line"></i> 金融产品推荐系统</h1>
+            <p>适合你的才是最好的————你的贴心投资管家</p>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title"><i class="fas fa-robot"></i> 模型训练</h2>
+            <p id="modelStatus" class="status-badge status-warning">
+                <i class="fas fa-circle-notch"></i> 模型尚未训练
+            </p>
+            <p>点击下方按钮，基于数据库中的真实用户行为训练智能推荐模型。</p>
+            <button type="button" class="btn" onclick="trainModel()">
+                <i class="fas fa-cogs"></i> 训练模型
+            </button>
+            <div id="trainingSummary" class="training-summary" style="display:none;"></div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title"><i class="fas fa-user-cog"></i> 用户画像设置</h2>
+            <form id="recommendationForm">
+                <div class="form-group">
+                    <label for="age"><i class="fas fa-birthday-cake"></i> 年龄</label>
+                    <input type="number" id="age" class="input-control" name="age" min="18" max="80" value="30"
+                        required>
+                </div>
+
+                <div class="form-group">
+                    <label for="occupation"><i class="fas fa-briefcase"></i> 职业</label>
+                    <select id="occupation" name="occupation" class="input-control">
+                        <option value="工程师">工程师</option>
+                        <option value="教师">教师</option>
+                        <option value="医生">医生</option>
+                        <option value="自由职业">自由职业</option>
+                        <option value="企业家">企业家</option>
+                        <option value="学生">学生</option>
+                        <option value="公务员">公务员</option>
+                        <option value="经理">经理</option>
+                        <option value="销售">销售</option>
+                        <option value="退休人员">退休人员</option>
+
+
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="income_level"><i class="fas fa-yen-sign"></i> 收入水平</label>
+                    <select id="income_level" name="income_level" class="input-control">
+                        <option value="low">低收入 ( < 8K/月 )</option>
+                        <option value="medium">中等收入 (8K-20K)</option>
+                        <option value="high">高收入 ( > 20K )</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="risk_tolerance"><i class="fas fa-shield-alt"></i> 风险偏好</label>
+                    <select id="risk_tolerance" name="risk_tolerance" class="input-control">
+                        <option value="low">低风险偏好</option>
+                        <option value="medium">中等风险偏好</option>
+                        <option value="high">高风险偏好</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="algorithm"><i class="fas fa-brain"></i> 推荐策略</label>
+                    <select id="algorithm" name="algorithm" class="input-control">
+                        <option value="decision_tree">决策树推荐（基于训练模型）</option>
+                        <option value="content">基于内容推荐（画像匹配）</option>
+                        <option value="all">算法对比（决策树 + 基于内容）</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="top_n"><i class="fas fa-list-ol"></i> 推荐数量</label>
+                    <input type="number" id="top_n" name="top_n" class="input-control" min="1" max="10" value="5">
+                </div>
+
+                <button type="button" class="btn" onclick="getRecommendations()">
+                    <i class="fas fa-search"></i> 个性化推荐
+                </button>
+            </form>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>正在为您计算最优推荐，请稍候...</p>
+        </div>
+
+        <div id="results" class="results">
+            <div class="results-header">
+                <h2><i class="fas fa-star"></i> 推荐结果</h2>
+                <button class="close-btn" onclick="closeResults()">&times;</button>
+            </div>
+            <div id="resultsContent"></div>
+        </div>
+
+        <footer>
+            <p>© 2025 金融产品推荐系统 | 电商金融小组作业</p>
+        </footer>
+    </div>
+
+    <script>
+        let modelReady = false;
+        const featureNameMap = {
+            age: '年龄',
+            occupation: '职业',
+            income_level: '收入水平',
+            risk_tolerance: '风险偏好'
+        };
+
+        function updateModelStatus(text, statusClass) {
+            const statusEl = document.getElementById('modelStatus');
+            statusEl.classList.remove('status-warning', 'status-info', 'status-success');
+            statusEl.classList.add(statusClass);
+            statusEl.innerHTML = `<i class="fas fa-info-circle"></i> ${text}`;
+        }
+
+        function showTrainingSummary(summary) {
+            const container = document.getElementById('trainingSummary');
+            if (!summary) {
+                container.style.display = 'none';
+                container.innerHTML = '';
+                return;
+            }
+            const importance = summary.feature_importances || {};
+            const listItems = Object.entries(importance)
+                .map(([key, value]) => `<li>${featureNameMap[key] || key}: ${(value * 100).toFixed(1)}%</li>`)
+                .join('');
+            container.innerHTML = `
+                <p>训练样本数：${summary.samples}</p>
+                <p>主要产品类型数：${summary.preferred_type_count}</p>
+                <p>特征重要性：</p>
+                <ul>${listItems || '<li>暂无数据</li>'}</ul>
+            `;
+            container.style.display = 'block';
+        }
+
+        function trainModel() {
+            updateModelStatus('模型训练中，请稍候...', 'status-info');
+            showTrainingSummary(null);
+
+            fetch('/train-model', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        modelReady = true;
+                        updateModelStatus('模型训练完成，可开始推荐', 'status-success');
+                        showTrainingSummary(data.summary);
+                    } else {
+                        modelReady = false;
+                        updateModelStatus(data.error || '训练失败，请重试', 'status-warning');
+                    }
+                })
+                .catch(error => {
+                    console.error(error);
+                    modelReady = false;
+                    updateModelStatus('训练失败，请检查后台日志', 'status-warning');
+                });
+        }
+
+        function getRecommendations() {
+            const algorithm = document.getElementById('algorithm').value;
+            const age = document.getElementById('age').value;
+            const occupation = document.getElementById('occupation').value;
+            const income = document.getElementById('income_level').value;
+            const risk = document.getElementById('risk_tolerance').value;
+            const topN = parseInt(document.getElementById('top_n').value, 10) || 5;
+
+            if ((algorithm === 'decision_tree' || algorithm === 'all') && !modelReady) {
+                alert('请先训练模型，再使用决策树相关推荐。');
+                return;
+            }
+
+            const payload = {
+                algorithm,
+                top_n: topN,
+                user_profile: {
+                    age,
+                    occupation,
+                    income_level: income,
+                    risk_tolerance: risk
+                }
+            };
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+
+            fetch('/recommend', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('loading').style.display = 'none';
+                    const resultsContent = document.getElementById('resultsContent');
+
+                    if (data.error || data.success === false) {
+                        resultsContent.innerHTML = `
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-triangle"></i> ${data.error || '请求失败，请稍后再试'}
+                            </div>
+                        `;
+                        document.getElementById('results').style.display = 'block';
+                        return;
+                    }
+
+                    let html = '';
+                    if (algorithm === 'all') {
+                        const resultMap = data.recommendations || {};
+                        for (const [algoName, recommendations] of Object.entries(resultMap)) {
+                            html += renderAlgorithmSection(algoName, recommendations);
+                        }
+                    } else {
+                        const algoName = data.algorithm_name || '推荐结果';
+                        const recommendations = data.recommendations || [];
+                        html += renderAlgorithmSection(algoName, recommendations);
+                    }
+
+                    resultsContent.innerHTML = html;
+                    document.getElementById('results').style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('resultsContent').innerHTML = `
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-triangle"></i> 请求失败，请重试
+                        </div>
+                    `;
+                    document.getElementById('results').style.display = 'block';
+                });
+        }
+
+        function renderAlgorithmSection(algoName, recommendations) {
+            let section = `
+                <div class="algorithm-section">
+                    <h3 class="algorithm-name">
+                        <i class="fas fa-microchip"></i> ${algoName}
+                    </h3>
+            `;
+
+            if (!recommendations || recommendations.length === 0) {
+                section += `
+                    <div class="no-results">
+                        <i class="fas fa-info-circle"></i> 暂无推荐产品
+                    </div>
+                `;
+            } else {
+                section += '<div class="product-grid">';
+                recommendations.forEach(rec => {
+                    if (rec.error) {
+                        section += `
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i> ${rec.error}
+                            </div>
+                        `;
+                        return;
+                    }
+                    section += generateProductCard(rec);
+                });
+                section += '</div>';
+            }
+            section += '</div>';
+            return section;
+        }
+
+        function generateProductCard(rec) {
+            const expectedReturn = rec.expected_return !== undefined ? `
+                <p>
+                    <span class="info-label">预期收益:</span>
+                    <span class="info-value">${rec.expected_return}%</span>
+                </p>` : '';
+            const scoreBlock = rec.score !== undefined ? `
+                <p>
+                    <span class="info-label">推荐度:</span>
+                    <span class="info-value">${Number(rec.score).toFixed(3)}</span>
+                </p>` : '';
+            const ratingBlock = rec.predicted_rating !== undefined ? `
+                <p>
+                    <span class="info-label">预测评分:</span>
+                    <span class="info-value">${Number(rec.predicted_rating).toFixed(2)}</span>
+                </p>` : '';
+            const similarityBlock = rec.similarity !== undefined ? `
+                <p>
+                    <span class="info-label">匹配度:</span>
+                    <span class="info-value">${Number(rec.similarity).toFixed(3)}</span>
+                </p>` : '';
+            const reasonBlock = rec.reason ? `
+                <p>
+                    <span class="info-label">推荐原因:</span>
+                    <span class="info-value">${rec.reason}</span>
+                </p>` : '';
+
+            return `
+                <div class="product">
+                    <h4><i class="fas fa-money-bill-wave"></i> ${rec.product_name}</h4>
+                    <div class="product-info">
+                        <p>
+                            <span class="info-label">产品类型:</span>
+                            <span class="info-value">${rec.product_type}</span>
+                        </p>
+                        <p>
+                            <span class="info-label">风险等级:</span>
+                            <span class="info-value">${rec.risk_level}</span>
+                        </p>
+                        ${scoreBlock}
+                        ${ratingBlock}
+                        ${similarityBlock}
+                        ${expectedReturn}
+                        ${reasonBlock}
+                    </div>
+                </div>
+            `;
+        }
+
+        function closeResults() {
+            document.getElementById('results').style.display = 'none';
+        }
+    </script>
+</body>
+
+</html>

@@ -1,179 +1,174 @@
+#!/usr/bin/env python
 # main.py
-# 金融产品推荐系统 - 主程序
+# 金融产品推荐系统 - 控制台模式（用户画像驱动）
 import sys
 import os
 
 # 添加 algorithms 目录到 Python 路径，这样可以直接导入算法模块
 sys.path.append(os.path.join(os.path.dirname(__file__), 'algorithms'))
 
-from database_utils import DatabaseManager
-from apriori_recommender import AprioriRecommender
-from collaborative_filtering import CollaborativeFiltering
 from content_based import ContentBasedRecommender
 from decision_tree_recommender import DecisionTreeRecommender
 
+
 class FinancialRecommendationSystem:
     def __init__(self):
-        self.db = DatabaseManager()
-        self.recommenders = {
-            '1': ('关联规则推荐 (Apriori)', AprioriRecommender()),
-            '2': ('协同过滤推荐', CollaborativeFiltering()),
-            '3': ('基于内容推荐', ContentBasedRecommender()),
-            '4': ('决策树推荐', DecisionTreeRecommender())
-        }
-    
+        self.decision_tree = DecisionTreeRecommender()
+        self.content_based = ContentBasedRecommender()
+        self.model_trained = False
+        self.training_summary = None
+        self.occupation_choices = [
+            ('工程师', '工程师 / 技术'),
+            ('教师', '教师'),
+            ('医生', '医生'),
+            ('自由职业', '自由职业'),
+            ('企业家', '企业家'),
+        ]
+        self.income_choices = [
+            ('low', '低收入 (<8K/月)'),
+            ('medium', '中等收入 (8K-20K)'),
+            ('high', '高收入 (>20K)'),
+        ]
+        self.risk_choices = [
+            ('low', '低风险'),
+            ('medium', '中等风险'),
+            ('high', '高风险'),
+        ]
+
     def display_welcome(self):
-        """显示欢迎界面"""
-        print("=" * 50)
-        print("      金融产品推荐系统")
-        print("=" * 50)
-        print("本系统提供多种智能推荐算法：")
-        for key, (name, _) in self.recommenders.items():
-            print(f"  {key}. {name}")
-        print("=" * 50)
-    
-    def get_user_input(self):
-        """获取用户输入"""
+        print("=" * 60)
+        print("            金融产品推荐系统 - 用户画像模式")
+        print("=" * 60)
+        print("操作流程：")
+        print("  1. 先使用历史用户数据训练决策树模型；")
+        print("  2. 输入年龄、职业、收入、风险偏好构建个人画像；")
+        print("  3. 选择推荐策略获取个性化金融产品。")
+        print("=" * 60)
+
+    def perform_training(self):
+        print("\n开始训练决策树模型...")
+        summary = self.decision_tree.train_model()
+        if summary is None:
+            print("训练失败：数据不足或连接异常。")
+            self.model_trained = False
+            return
+
+        self.model_trained = True
+        self.training_summary = summary
+        print("训练完成 ✅")
+        print(f"  - 训练样本数: {summary['samples']}")
+        print(f"  - 偏好类型数: {summary['preferred_type_count']}")
+        print("  - 特征重要性:")
+        for feature, importance in summary['feature_importances'].items():
+            print(f"      · {feature}: {importance:.3f}")
+
+    def _prompt_int(self, prompt, min_value, max_value):
         while True:
             try:
-                user_id = int(input("请输入用户ID (1-5): "))
-                if 1 <= user_id <= 5:
-                    break
-                else:
-                    print("用户ID范围是1-5，请重新输入！")
+                value = input(prompt)
+                value = int(value)
+                if min_value <= value <= max_value:
+                    return value
+                print(f"请输入 {min_value}-{max_value} 之间的数字。")
             except ValueError:
-                print("请输入有效的数字！")
-        
-        print("\n请选择推荐算法：")
-        for key, (name, _) in self.recommenders.items():
-            print(f"  {key}. {name}")
-        print("  5. 全部算法对比")
-        
+                print("请输入有效数字。")
+
+    def _prompt_choice(self, title, choices):
+        print(f"\n{title}")
+        for idx, (_, label) in enumerate(choices, 1):
+            print(f"  {idx}. {label}")
         while True:
-            choice = input("请选择 (1-5): ")
-            if choice in ['1', '2', '3', '4', '5']:
-                break
+            choice = input("请选择编号: ").strip()
+            if choice.isdigit():
+                idx = int(choice)
+                if 1 <= idx <= len(choices):
+                    return choices[idx - 1][0]
+            print("输入无效，请重新选择。")
+
+    def collect_user_profile(self):
+        print("\n请填写您的基本画像信息：")
+        age = self._prompt_int("  年龄 (18-80): ", 18, 80)
+        occupation = self._prompt_choice("  职业：", self.occupation_choices)
+        income = self._prompt_choice("  收入水平：", self.income_choices)
+        risk = self._prompt_choice("  风险偏好：", self.risk_choices)
+        return {
+            'age': age,
+            'occupation': occupation,
+            'income_level': income,
+            'risk_tolerance': risk
+        }
+
+    def choose_algorithm(self):
+        print("\n请选择推荐策略：")
+        print("  1. 决策树推荐（基于训练模型）")
+        print("  2. 基于内容推荐（画像匹配）")
+        print("  3. 双算法对比")
+        while True:
+            choice = input("请输入 1/2/3: ").strip()
+            if choice in ['1', '2', '3']:
+                return choice
+            print("输入无效，请重新选择。")
+
+    def get_top_n(self):
+        while True:
+            raw = input("希望获得多少条推荐？(1-10, 默认5): ").strip()
+            if not raw:
+                return 5
+            if raw.isdigit():
+                top_n = int(raw)
+                if 1 <= top_n <= 10:
+                    return top_n
+            print("请输入 1-10 之间的数字。")
+
+    def show_recommendations(self, title, recommendations):
+        print(f"\n{title}")
+        print("-" * 40)
+        if not recommendations:
+            print("  暂无推荐，请调整画像或检查数据。")
+            return
+        for idx, rec in enumerate(recommendations, 1):
+            print(f"  {idx}. {rec['product_name']} ({rec['product_type']})")
+            if 'expected_return' in rec:
+                print(f"     预期收益: {rec['expected_return']}%")
+            if 'similarity' in rec:
+                print(f"     匹配度: {rec['similarity']:.3f}")
+            if 'reason' in rec:
+                print(f"     推荐理由: {rec['reason']}")
+
+    def run_recommendations(self, choice, profile, top_n):
+        if choice in ['1', '3']:
+            if not self.model_trained:
+                print("\n请先完成模型训练，再使用决策树推荐。")
             else:
-                print("请输入1-5之间的数字！")
-        
-        return user_id, choice
-    
-    def get_user_info(self, user_id):
-        """获取并显示用户信息"""
-        user_df = self.db.get_user_by_id(user_id)
-        if len(user_df) > 0:
-            user = user_df.iloc[0]
-            print(f"\n当前用户: ID{user_id}")
-            print(f"  年龄: {user['age']} | 职业: {user['occupation']}")
-            print(f"  收入水平: {user['income_level']} | 风险承受: {user['risk_tolerance']}")
-        return user_df
-    
-    def run_single_algorithm(self, user_id, algorithm_choice):
-        """运行单个算法 - 增强错误处理"""
-        algorithm_name, recommender = self.recommenders[algorithm_choice]
-        print(f"\n{'='*60}")
-        print(f"正在使用 {algorithm_name}...")
-        print(f"{'='*60}")
-        
-        try:
-            # 确保算法有recommend_for_user方法
-            if hasattr(recommender, 'recommend_for_user'):
-                recommendations = recommender.recommend_for_user(user_id)
-            else:
-                print(f"  错误: {algorithm_name} 缺少 recommend_for_user 方法")
-                return
-            
-            if not recommendations:
-                print("  暂无推荐结果")
-                return
-            
-            print(f"\n推荐结果 (共{len(recommendations)}个):")
-            for i, rec in enumerate(recommendations, 1):
-                print(f"  {i}. {rec['product_name']}")
-                
-                # 显示产品信息
-                print(f"     类型: {rec.get('product_type', '未知')}, 风险: {rec.get('risk_level', '未知')}")
-                
-                # 显示推荐指标
-                if 'score' in rec:
-                    print(f"     推荐度: {rec['score']:.3f}")
-                elif 'predicted_rating' in rec:
-                    print(f"     预测评分: {rec['predicted_rating']:.2f}")
-                elif 'similarity' in rec:
-                    print(f"     匹配度: {rec['similarity']:.3f}")
-                elif 'expected_return' in rec:
-                    print(f"     预期收益: {rec['expected_return']}%")
-                
-                # 显示推荐原因
-                if 'reason' in rec:
-                    print(f"     原因: {rec['reason']}")
-                print()
-                    
-        except Exception as e:
-            print(f"  算法执行出错: {e}")
-            import traceback
-            traceback.print_exc()  # 打印详细错误信息
-    
-    def run_all_algorithms(self, user_id):
-        """运行所有算法进行对比"""
-        print(f"\n{'='*60}")
-        print(f"为用户 {user_id} 的全面推荐分析")
-        print(f"{'='*60}")
-        
-        for algo_key, (algo_name, recommender) in self.recommenders.items():
-            print(f"\n{algo_name}:")
-            print("-" * 40)
-            
-            try:
-                recommendations = recommender.recommend_for_user(user_id, top_n=2)
-                
-                if not recommendations:
-                    print("  暂无推荐")
-                    continue
-                
-                for i, rec in enumerate(recommendations, 1):
-                    print(f"  {i}. {rec['product_name']}")
-                    # 显示关键指标
-                    if 'score' in rec:
-                        print(f"     推荐度: {rec['score']:.3f}")
-                    elif 'predicted_rating' in rec:
-                        print(f"     预测评分: {rec['predicted_rating']:.2f}")
-                    elif 'similarity' in rec:
-                        print(f"     匹配度: {rec['similarity']:.3f}")
-                    elif 'expected_return' in rec:
-                        print(f"     预期收益: {rec['expected_return']}%")
-            except Exception as e:
-                print(f"  执行出错: {e}")
-    
+                recs = self.decision_tree.recommend_for_profile(profile, top_n=top_n)
+                self.show_recommendations("【决策树推荐】", recs)
+
+        if choice in ['2', '3']:
+            recs = self.content_based.recommend_for_profile(profile, top_n=top_n)
+            self.show_recommendations("【基于内容推荐】", recs)
+
     def run(self):
-        """运行主程序"""
         self.display_welcome()
-        
         while True:
-            try:
-                user_id, choice = self.get_user_input()
-                self.get_user_info(user_id)
-                
-                if choice == '5':
-                    self.run_all_algorithms(user_id)
-                else:
-                    self.run_single_algorithm(user_id, choice)
-                
-                # 询问是否继续
-                continue_choice = input("\n是否继续推荐？(y/n): ").lower()
-                if continue_choice != 'y':
-                    print("\n感谢使用金融产品推荐系统！")
-                    break
-                print("\n" + "="*60 + "\n")
-                    
-            except KeyboardInterrupt:
-                print("\n\n程序已退出！")
+            print("\n主菜单：")
+            print("  1. 训练 / 更新模型")
+            print("  2. 输入用户画像并获取推荐")
+            print("  3. 退出系统")
+            action = input("请选择 (1/2/3): ").strip()
+
+            if action == '1':
+                self.perform_training()
+            elif action == '2':
+                profile = self.collect_user_profile()
+                algo_choice = self.choose_algorithm()
+                top_n = self.get_top_n()
+                self.run_recommendations(algo_choice, profile, top_n)
+            elif action == '3':
+                print("\n感谢使用金融产品推荐系统，再见！")
                 break
-            except Exception as e:
-                print(f"发生错误: {e}")
-                continue_choice = input("是否继续？(y/n): ").lower()
-                if continue_choice != 'y':
-                    break
+            else:
+                print("输入无效，请重新选择。")
+
 
 if __name__ == "__main__":
     system = FinancialRecommendationSystem()

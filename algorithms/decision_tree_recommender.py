@@ -41,12 +41,14 @@ class DecisionTreeRecommender:
         return training_data
     
     def train_model(self):
-        """训练决策树模型"""
+        """训练决策树模型，并返回训练摘要"""
         training_data = self.prepare_training_data()
         
         if len(training_data) == 0:
             print("没有足够的训练数据")
-            return
+            self.model = None
+            self.label_encoders = {}
+            return None
         
         # 特征编码
         feature_columns = ['age', 'occupation', 'income_level', 'risk_tolerance']
@@ -63,14 +65,23 @@ class DecisionTreeRecommender:
         self.model = DecisionTreeClassifier(random_state=42)
         self.model.fit(X, y)
         
+        summary = {
+            'samples': len(X),
+            'preferred_type_count': training_data['preferred_type'].nunique(),
+            'feature_importances': dict(zip(feature_columns, self.model.feature_importances_))
+        }
+        
         print("决策树模型训练完成!")
-        print(f"训练样本数: {len(X)}")
-        print(f"特征重要性: {dict(zip(feature_columns, self.model.feature_importances_))}")
+        print(f"训练样本数: {summary['samples']}")
+        print(f"特征重要性: {summary['feature_importances']}")
+        return summary
     
     def predict_preference(self, user_data):
         """预测用户偏好"""
-        if self.model is None:
-            self.train_model()
+        if self.model is None or not self.label_encoders:
+            summary = self.train_model()
+            if summary is None:
+                raise ValueError("模型尚未训练，无法完成预测")
         
         # 准备输入特征
         feature_columns = ['age', 'occupation', 'income_level', 'risk_tolerance']
@@ -78,7 +89,9 @@ class DecisionTreeRecommender:
         
         # 编码分类特征
         for col in ['occupation', 'income_level', 'risk_tolerance']:
-            le = self.label_encoders[col]
+            le = self.label_encoders.get(col)
+            if le is None:
+                raise ValueError("模型尚未训练，缺少编码器")
             # 处理未见过的类别
             if user_data[col] in le.classes_:
                 X_input[col] = le.transform([user_data[col]])[0]
@@ -89,35 +102,21 @@ class DecisionTreeRecommender:
         predicted_type = self.model.predict(X_input)[0]
         return predicted_type
     
-    def recommend_for_user(self, user_id, top_n=3):
-        """为用户生成推荐"""
-        user_df = self.db.get_user_by_id(user_id)
-        if len(user_df) == 0:
+    def recommend_for_profile(self, user_data, top_n=3, exclude_product_ids=None):
+        """基于用户画像（无需用户ID）生成推荐"""
+        if user_data is None:
             return []
         
-        user_data = user_df.iloc[0].to_dict()
-        
-        # 预测用户偏好类型
         preferred_type = self.predict_preference(user_data)
         
-        # 获取该类型的所有产品
         products_df = self.db.get_all_products()
         type_products = products_df[products_df['product_type'] == preferred_type]
         
-        # 获取用户已购买的产品
-        behavior_df = self.db.get_user_behavior()
-        purchased_products = behavior_df[
-            (behavior_df['user_id'] == user_id) & 
-            (behavior_df['behavior_type'] == 'purchase')
-        ]['product_id'].tolist()
+        if exclude_product_ids:
+            type_products = type_products[~type_products['product_id'].isin(exclude_product_ids)]
         
-        # 过滤掉已购买的产品
-        recommendations_df = type_products[~type_products['product_id'].isin(purchased_products)]
+        recommendations_df = type_products.sort_values('expected_return', ascending=False)
         
-        # 按预期收益排序
-        recommendations_df = recommendations_df.sort_values('expected_return', ascending=False)
-        
-        # 转换为推荐列表
         recommendations = []
         for _, product in recommendations_df.head(top_n).iterrows():
             recommendations.append({
@@ -126,10 +125,30 @@ class DecisionTreeRecommender:
                 'product_type': product['product_type'],
                 'expected_return': product['expected_return'],
                 'risk_level': product['risk_level'],
-                'reason': f'匹配您的偏好类型: {preferred_type}'
+                'reason': f'预测您偏好 {preferred_type} 产品'
             })
         
         return recommendations
+    
+    def recommend_for_user(self, user_id, top_n=3):
+        """兼容旧逻辑，仍可通过用户ID获取推荐"""
+        user_df = self.db.get_user_by_id(user_id)
+        if len(user_df) == 0:
+            return []
+        
+        user_data = user_df.iloc[0].to_dict()
+        
+        behavior_df = self.db.get_user_behavior()
+        purchased_products = behavior_df[
+            (behavior_df['user_id'] == user_id) & 
+            (behavior_df['behavior_type'] == 'purchase')
+        ]['product_id'].tolist()
+        
+        return self.recommend_for_profile(
+            user_data,
+            top_n=top_n,
+            exclude_product_ids=purchased_products
+        )
 
 # 测试代码
 if __name__ == "__main__":

@@ -71,7 +71,7 @@ class CollaborativeFiltering:
         
         # 按预测评分排序
         recommendations.sort(key=lambda x: x['predicted_rating'], reverse=True)
-        return recommendations[:5]  # 返回前5个推荐
+        return recommendations[:top_n]  # 返回前5个推荐
 
 # 测试代码
 if __name__ == "__main__":

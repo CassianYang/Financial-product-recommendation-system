@@ -1,7 +1,8 @@
 from database_utils import DatabaseManager
-import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.preprocessing import LabelEncoder
+import numpy as np
+
 
 class ContentBasedRecommender:
     def __init__(self):
@@ -9,7 +10,7 @@ class ContentBasedRecommender:
         self.label_encoders = {}
     
     def prepare_product_features(self):
-        """准备产品特征向量"""
+        """准备产品特征向量 - 修复版本"""
         products_df = self.db.get_all_products()
         
         # 对分类特征进行编码
@@ -18,23 +19,29 @@ class ContentBasedRecommender:
         for col in feature_columns:
             le = LabelEncoder()
             products_df[col + '_encoded'] = le.fit_transform(products_df[col])
-            self.label_encoders[col] = le  # 保存编码器供后续使用
+            self.label_encoders[col] = le
         
-        # 选择数值特征
+        # 选择数值特征并归一化
         numerical_features = ['expected_return', 'min_investment']
         
-        # 创建特征矩阵
-        feature_cols = ['product_type_encoded', 'risk_level_encoded'] + numerical_features
+        # 归一化数值特征到 [0, 1] 范围
+        for feature in numerical_features:
+            min_val = products_df[feature].min()
+            max_val = products_df[feature].max()
+            if max_val > min_val:
+                products_df[feature + '_norm'] = (products_df[feature] - min_val) / (max_val - min_val)
+            else:
+                products_df[feature + '_norm'] = 0.5
+        
+        # 创建特征矩阵 - 使用编码后的分类特征和归一化的数值特征
+        feature_cols = ['product_type_encoded', 'risk_level_encoded', 
+                       'expected_return_norm', 'min_investment_norm']
         feature_matrix = products_df[feature_cols].values
         
-        # 标准化数值特征
-        scaler = StandardScaler()
-        feature_matrix_scaled = scaler.fit_transform(feature_matrix)
-        
-        return products_df, feature_matrix_scaled
+        return products_df, feature_matrix
     
     def get_user_profile(self, user_id):
-        """基于用户历史购买构建用户画像"""
+        """基于用户历史购买构建用户画像 - 修复版本"""
         behavior_df = self.db.get_user_behavior()
         user_df = self.db.get_user_by_id(user_id)
         
@@ -49,16 +56,17 @@ class ContentBasedRecommender:
             (behavior_df['behavior_type'] == 'purchase')
         ]['product_id'].tolist()
         
+        products_df, feature_matrix = self.prepare_product_features()
+        
         if not user_purchases:
-            # 如果用户没有购买历史，基于用户 demographic 信息
-            return self.create_profile_from_demographics(user_df.iloc[0])
+            # 如果用户没有购买历史，基于用户特征创建画像
+            return self.create_profile_from_demographics(user_data, feature_matrix.shape[1])
         
         # 基于购买历史构建画像
-        products_df, feature_matrix = self.prepare_product_features()
         user_products_df = products_df[products_df['product_id'].isin(user_purchases)]
         
         if len(user_products_df) == 0:
-            return self.create_profile_from_demographics(user_df.iloc[0])
+            return self.create_profile_from_demographics(user_data, feature_matrix.shape[1])
         
         # 计算用户偏好向量（购买产品的平均特征）
         user_indices = user_products_df.index
@@ -67,58 +75,118 @@ class ContentBasedRecommender:
         
         return user_profile
     
-    def create_profile_from_demographics(self, user_data):
-        """基于用户人口统计信息创建画像（用于新用户）"""
-        # 简化的映射逻辑
+    def create_profile_from_demographics(self, user_data, feature_dim):
+        """基于用户人口统计信息创建画像 - 修复版本"""
+        # 创建基于用户特征的简单画像
         risk_mapping = {'low': 0, 'medium': 1, 'high': 2}
         income_mapping = {'low': 0, 'medium': 1, 'high': 2}
+        occupation_mapping = {'工程师': 2, '教师': 1, '医生': 2, '自由职业': 1, '企业家': 3}
         
-        # 这里可以根据业务逻辑设计更复杂的画像
-        profile = np.array([
-            risk_mapping.get(user_data['risk_tolerance'], 1),  # 风险偏好
-            income_mapping.get(user_data['income_level'], 1),  # 收入水平
-            user_data['age'] / 100,  # 年龄归一化
-            0.5, 0.5  # 其他特征占位符
-        ])
+        # 简化的特征映射
+        profile = np.zeros(feature_dim)
+        
+        # 根据特征维度调整
+        if feature_dim >= 2:
+            profile[0] = risk_mapping.get(user_data['risk_tolerance'], 1) / 2.0  # 风险偏好
+            profile[1] = income_mapping.get(user_data['income_level'], 1) / 2.0  # 收入水平
+        
+        if feature_dim >= 4:
+            profile[2] = min(user_data['age'] / 80.0, 1.0)  # 年龄归一化
+            profile[3] = occupation_mapping.get(user_data['occupation'], 1) / 3.0  # 职业
         
         return profile
     
-    def recommend_for_user(self, user_id, top_n=5):
-        """为用户生成基于内容的推荐"""
-        products_df, product_features = self.prepare_product_features()
-        user_profile = self.get_user_profile(user_id)
-        
-        # 调整维度匹配（简化处理）
-        min_dim = min(len(user_profile), product_features.shape[1])
-        user_profile_adj = user_profile[:min_dim]
-        product_features_adj = product_features[:, :min_dim]
-        
-        # 计算用户画像与所有产品的相似度
-        similarities = cosine_similarity([user_profile_adj], product_features_adj)[0]
-        
-        # 获取用户已购买的产品（避免重复推荐）
-        behavior_df = self.db.get_user_behavior()
-        purchased_products = behavior_df[
-            (behavior_df['user_id'] == user_id) & 
-            (behavior_df['behavior_type'] == 'purchase')
-        ]['product_id'].tolist()
-        
-        # 生成推荐列表
-        recommendations = []
-        for idx, similarity in enumerate(similarities):
-            product = products_df.iloc[idx]
-            if product['product_id'] not in purchased_products:
+    def convert_to_serializable(self, obj):
+        """将numpy类型转换为Python原生类型，确保JSON可序列化"""
+        if isinstance(obj, (np.integer, np.int64)):
+            return int(obj)
+        elif isinstance(obj, (np.floating, np.float64)):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return obj
+
+    
+    def recommend_for_profile(self, user_data, top_n=5):
+        """基于用户画像（年龄/职业等）生成推荐"""
+        try:
+            if user_data is None:
+                return []
+            
+            products_df, product_features = self.prepare_product_features()
+            feature_dim = product_features.shape[1]
+            user_profile = self.create_profile_from_demographics(user_data, feature_dim)
+            
+            # 计算用户画像与所有产品的相似度
+            similarities = cosine_similarity([user_profile], product_features)[0]
+            
+            recommendations = []
+            for idx, similarity in enumerate(similarities):
+                if similarity <= 0:
+                    continue
+                product = products_df.iloc[idx]
                 recommendations.append({
-                    'product_id': product['product_id'],
-                    'product_name': product['product_name'],
-                    'similarity': similarity,
-                    'product_type': product['product_type'],
-                    'risk_level': product['risk_level']
+                    'product_id': self.convert_to_serializable(product['product_id']),
+                    'product_name': str(product['product_name']),
+                    'product_type': str(product['product_type']),
+                    'risk_level': str(product['risk_level']),
+                    'similarity': self.convert_to_serializable(similarity),
+                    'reason': f'画像匹配度 {float(similarity):.3f}'
                 })
-        
-        # 按相似度排序
-        recommendations.sort(key=lambda x: x['similarity'], reverse=True)
-        return recommendations[:top_n]
+            
+            recommendations.sort(key=lambda x: x['similarity'], reverse=True)
+            return recommendations[:top_n]
+        except Exception as e:
+            print(f"基于内容推荐出错: {e}")
+            return []
+    
+    def recommend_for_user(self, user_id, top_n=5):
+        """兼容旧逻辑：继续支持根据用户ID推荐"""
+        try:
+            products_df, product_features = self.prepare_product_features()
+            user_profile = self.get_user_profile(user_id)
+            
+            if user_profile is None:
+                return []
+            
+            # 确保维度匹配
+            min_dim = min(len(user_profile), product_features.shape[1])
+            user_profile_adj = user_profile[:min_dim]
+            product_features_adj = product_features[:, :min_dim]
+            
+            # 计算用户画像与所有产品的相似度
+            similarities = cosine_similarity([user_profile_adj], product_features_adj)[0]
+            
+            # 获取用户已购买的产品（避免重复推荐）
+            behavior_df = self.db.get_user_behavior()
+            purchased_products = behavior_df[
+                (behavior_df['user_id'] == user_id) & 
+                (behavior_df['behavior_type'] == 'purchase')
+            ]['product_id'].tolist()
+            
+            # 生成推荐列表
+            recommendations = []
+            for idx, similarity in enumerate(similarities):
+                product = products_df.iloc[idx]
+                if product['product_id'] not in purchased_products and similarity > 0:
+                    recommendations.append({
+                        'product_id': self.convert_to_serializable(product['product_id']),
+                        'product_name': str(product['product_name']),
+                        'product_type': str(product['product_type']),
+                        'risk_level': str(product['risk_level']),
+                        'similarity': self.convert_to_serializable(similarity),
+                        'reason': f'与您的画像匹配度: {float(similarity):.3f}'
+                    })
+            
+            # 按相似度排序
+            recommendations.sort(key=lambda x: x['similarity'], reverse=True)
+            return recommendations[:top_n]
+            
+        except Exception as e:
+            print(f"基于内容推荐出错: {e}")
+            return []
+
 
 # 测试代码
 if __name__ == "__main__":
