@@ -410,8 +410,6 @@
                         <option value="经理">经理</option>
                         <option value="销售">销售</option>
                         <option value="退休人员">退休人员</option>
-
-
                     </select>
                 </div>
 
@@ -433,12 +431,56 @@
                     </select>
                 </div>
 
+                <!-- 新增扩展字段 -->
+                <div class="form-group">
+                    <label for="investment_goal"><i class="fas fa-bullseye"></i> 投资目标</label>
+                    <select id="investment_goal" name="investment_goal" class="input-control">
+                        <option value="short_term">短期(1年以内)</option>
+                        <option value="medium_term" selected>中期(1-5年)</option>
+                        <option value="long_term">长期(5年以上)</option>
+                        <option value="retirement">退休规划</option>
+                        <option value="education">教育基金</option>
+                        <option value="house">购房计划</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="investment_experience"><i class="fas fa-graduation-cap"></i> 投资经验</label>
+                    <select id="investment_experience" name="investment_experience" class="input-control">
+                        <option value="beginner">新手</option>
+                        <option value="intermediate" selected>有一定经验</option>
+                        <option value="advanced">经验丰富</option>
+                        <option value="professional">专业投资者</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="investment_amount"><i class="fas fa-wallet"></i> 投资金额范围</label>
+                    <select id="investment_amount" name="investment_amount" class="input-control">
+                        <option value="small">小额(<5万)</option>
+                        <option value="medium" selected>中等(5-20万)</option>
+                        <option value="large">大额(>20万)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="special_needs"><i class="fas fa-heart"></i> 特殊需求</label>
+                    <select id="special_needs" name="special_needs" class="input-control">
+                        <option value="none">无特殊需求</option>
+                        <option value="esg">ESG投资(环保、社会责任)</option>
+                        <option value="tax_efficient">税务优惠产品</option>
+                        <option value="liquid">高流动性需求</option>
+                        <option value="capital_preservation">本金保障优先</option>
+                    </select>
+                </div>
+
                 <div class="form-group">
                     <label for="algorithm"><i class="fas fa-brain"></i> 推荐策略</label>
                     <select id="algorithm" name="algorithm" class="input-control">
                         <option value="decision_tree">决策树推荐（基于训练模型）</option>
                         <option value="content">基于内容推荐（画像匹配）</option>
-                        <option value="all">算法对比（决策树 + 基于内容）</option>
+                        <option value="large_model">大模型个性化推荐</option>
+                        <option value="all">算法对比（全部算法）</option>
                     </select>
                 </div>
 
@@ -536,6 +578,10 @@
             const occupation = document.getElementById('occupation').value;
             const income = document.getElementById('income_level').value;
             const risk = document.getElementById('risk_tolerance').value;
+            const investmentGoal = document.getElementById('investment_goal').value;
+            const investmentExperience = document.getElementById('investment_experience').value;
+            const investmentAmount = document.getElementById('investment_amount').value;
+            const specialNeeds = document.getElementById('special_needs').value;
             const topN = parseInt(document.getElementById('top_n').value, 10) || 5;
 
             if ((algorithm === 'decision_tree' || algorithm === 'all') && !modelReady) {
@@ -550,7 +596,11 @@
                     age,
                     occupation,
                     income_level: income,
-                    risk_tolerance: risk
+                    risk_tolerance: risk,
+                    investment_goal: investmentGoal,
+                    investment_experience: investmentExperience,
+                    investment_amount: investmentAmount,
+                    special_needs: specialNeeds
                 }
             };
 
@@ -582,13 +632,20 @@
                     let html = '';
                     if (algorithm === 'all') {
                         const resultMap = data.recommendations || {};
-                        for (const [algoName, recommendations] of Object.entries(resultMap)) {
-                            html += renderAlgorithmSection(algoName, recommendations);
+                        for (const [algoName, recommendationsData] of Object.entries(resultMap)) {
+                            // 检查是否是大模型推荐结果
+                            if (recommendationsData.recommendations && recommendationsData.advice) {
+                                html += renderAlgorithmSection(algoName, recommendationsData.recommendations, recommendationsData.advice);
+                            } else {
+                                html += renderAlgorithmSection(algoName, recommendationsData);
+                            }
                         }
                     } else {
                         const algoName = data.algorithm_name || '推荐结果';
                         const recommendations = data.recommendations || [];
-                        html += renderAlgorithmSection(algoName, recommendations);
+                        // 检查是否有大模型的个性化建议
+                        const advice = data.advice || null;
+                        html += renderAlgorithmSection(algoName, recommendations, advice);
                     }
 
                     resultsContent.innerHTML = html;
@@ -606,13 +663,25 @@
                 });
         }
 
-        function renderAlgorithmSection(algoName, recommendations) {
+        function renderAlgorithmSection(algoName, recommendations, advice = null) {
             let section = `
                 <div class="algorithm-section">
                     <h3 class="algorithm-name">
                         <i class="fas fa-microchip"></i> ${algoName}
                     </h3>
             `;
+
+            // 如果有大模型建议，先显示建议
+            if (advice) {
+                section += `
+                    <div class="advice-section" style="background: #e8f4fd; border: 1px solid #2196f3; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="color: #0d47a1; margin-top: 0; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-lightbulb"></i> 个性化投资建议
+                        </h4>
+                        <div style="white-space: pre-line; line-height: 1.6;">${advice}</div>
+                    </div>
+                `;
+            }
 
             if (!recommendations || recommendations.length === 0) {
                 section += `

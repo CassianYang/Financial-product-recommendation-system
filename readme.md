@@ -6,8 +6,7 @@
 
 1. **决策树推荐**：基于用户历史行为和特征训练决策树模型，预测用户偏好类型
 2. **基于内容的推荐**：通过用户画像与产品特征的相似度匹配进行推荐
-3. **协同过滤推荐**：基于用户行为相似性进行推荐
-4. **Apriori关联规则推荐**：通过挖掘用户购买行为中的关联规则进行推荐
+3. **大模型推荐**：结合传统算法与大模型生成个性化投资建议
 
 系统支持两种运行模式：
 - Web界面模式（app.py）：通过Flask提供Web界面
@@ -28,8 +27,6 @@ Financial-product-recommendation-system/
 │   ├── README.md            # 文档说明
 │   ├── CRM——上机报告2025.doc # 上机报告文档
 │   ├── flowcharts/          # 流程图目录
-│   │   ├── apriori_flowchart_improved.png          # Apriori算法流程图
-│   │   ├── collaborative_filtering_flowchart_improved.png # 协同过滤算法流程图
 │   │   ├── content_based_flowchart_improved.png         # 基于内容算法流程图
 │   │   ├── decision_tree_flowchart_improved.png         # 决策树算法流程图
 │   │   └── combined_flowchart_improved.png              # 组合算法流程图
@@ -110,15 +107,10 @@ python algorithms/create_database.py
 - 用户画像基于年龄、职业、收入、风险偏好等特征构建
 - 推荐与用户画像最匹配的产品
 
-### 协同过滤推荐
-- 基于用户行为相似性进行推荐
-- 通过用户-产品交互矩阵发现相似用户
-- 推荐相似用户喜欢但目标用户未接触的产品
-
-### Apriori关联规则推荐
-- 通过挖掘用户购买行为中的关联规则进行推荐
-- 发现产品之间的关联关系
-- 推荐与用户已购买产品相关的其他产品
+### 大模型推荐
+- 结合传统推荐算法和大模型生成个性化建议
+- 基于用户画像提供专业投资指导
+- 提供更人性化的推荐体验
 
 ## 使用方法
 
@@ -148,7 +140,7 @@ python generate_large_data.py
 - `POST /add_behavior` - 添加用户行为数据
 
 ### 推荐接口
-系统提供多种推荐算法供调用，支持根据用户画像获取个性化推荐。
+系统提供多种推荐算法供调用，支持根据用户画像获取个性化推荐，包括决策树推荐、基于内容推荐和大模型推荐。
 
 ## 项目特色
 

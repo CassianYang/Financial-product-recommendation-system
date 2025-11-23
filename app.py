@@ -9,6 +9,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'algorithms'))
   
 from content_based import ContentBasedRecommender
 from decision_tree_recommender import DecisionTreeRecommender
+from large_model_recommender import LargeModelRecommender
 import numpy as np
 
 app = Flask(__name__)
@@ -16,10 +17,12 @@ app = Flask(__name__)
 # 初始化推荐器与模型状态
 decision_tree_recommender = DecisionTreeRecommender()
 content_recommender = ContentBasedRecommender()
+large_model_recommender = LargeModelRecommender()
 
 profile_recommenders = {
     'decision_tree': ('决策树推荐', decision_tree_recommender),
-    'content': ('基于内容推荐', content_recommender)
+    'content': ('基于内容推荐', content_recommender),
+    'large_model': ('大模型推荐', large_model_recommender)
 }
 
 model_trained = False
@@ -86,8 +89,13 @@ def run_recommender(algo_key, user_profile, top_n):
     if algo_key == 'decision_tree' and not model_trained:
         raise ValueError('请先完成模型训练，再进行推荐。')
     
-    recommendations = recommender.recommend_for_profile(user_profile, top_n=top_n)
-    return algo_name, serialize_recommendations(recommendations)
+    # 特殊处理大模型推荐器
+    if algo_key == 'large_model':
+        result = recommender.recommend_with_advice(user_profile, top_n=top_n)
+        return algo_name, serialize_recommendations(result['recommendations']), result.get('advice', '')
+    else:
+        recommendations = recommender.recommend_for_profile(user_profile, top_n=top_n)
+        return algo_name, serialize_recommendations(recommendations), None
 
 
 @app.route('/recommend', methods=['POST'])
@@ -102,16 +110,19 @@ def recommend():
         if not user_profile:
             return jsonify({'success': False, 'error': '缺少用户画像数据'})
         
-        required_fields = ['age', 'occupation', 'income_level', 'risk_tolerance']
-        missing_fields = [field for field in required_fields if field not in user_profile]
-        if missing_fields:
-            return jsonify({'success': False, 'error': f"缺少字段: {', '.join(missing_fields)}"})
+        # 对于大模型推荐，我们不需要强制要求基础字段，因为可能有其他扩展字段
+        if algorithm != 'large_model':
+            required_fields = ['age', 'occupation', 'income_level', 'risk_tolerance']
+            missing_fields = [field for field in required_fields if field not in user_profile]
+            if missing_fields:
+                return jsonify({'success': False, 'error': f"缺少字段: {', '.join(missing_fields)}"})
         
-        # 确保年龄为整数
-        try:
-            user_profile['age'] = int(user_profile['age'])
-        except (ValueError, TypeError):
-            return jsonify({'success': False, 'error': '年龄必须为数字'})
+        # 确保年龄为整数（如果提供了年龄）
+        if 'age' in user_profile:
+            try:
+                user_profile['age'] = int(user_profile['age'])
+            except (ValueError, TypeError):
+                return jsonify({'success': False, 'error': '年龄必须为数字'})
         
         print(f"收到推荐请求: 算法{algorithm}, 特征{user_profile}, 数量{top_n}")
         
@@ -119,27 +130,45 @@ def recommend():
             results = {}
             for algo_key in profile_recommenders:
                 try:
-                    algo_name, recs = run_recommender(algo_key, user_profile, top_n)
-                    results[algo_name] = recs
+                    algo_name, recs, advice = run_recommender(algo_key, user_profile, top_n)
+                    if advice is not None:  # 大模型推荐
+                        results[algo_name] = {
+                            'recommendations': recs,
+                            'advice': advice
+                        }
+                    else:  # 其他算法推荐
+                        results[algo_name] = recs
                     print(f"{algo_name}完成: 找到{len(recs)}个推荐")
                 except Exception as e:
                     error_msg = f"{profile_recommenders[algo_key][0]} 执行错误: {str(e)}"
                     print(error_msg)
-                    results[profile_recommenders[algo_key][0]] = [{'error': error_msg}]
+                    if algo_key == 'large_model':
+                        results[profile_recommenders[algo_key][0]] = {
+                            'recommendations': [{'error': error_msg}],
+                            'advice': ''
+                        }
+                    else:
+                        results[profile_recommenders[algo_key][0]] = [{'error': error_msg}]
                     
             return jsonify({
                 'success': True,
                 'recommendations': results
             })
         else:
-            algo_name, recommendations = run_recommender(algorithm, user_profile, top_n)
+            algo_name, recommendations, advice = run_recommender(algorithm, user_profile, top_n)
             print(f"{algo_name}完成: 找到{len(recommendations)}个推荐")
             
-            return jsonify({
+            response_data = {
                 'success': True,
                 'algorithm_name': algo_name,
                 'recommendations': recommendations
-            })
+            }
+            
+            # 如果是大模型推荐，添加个性化建议
+            if advice is not None:
+                response_data['advice'] = advice
+            
+            return jsonify(response_data)
             
     except Exception as e:
         error_msg = f"系统错误: {str(e)}"

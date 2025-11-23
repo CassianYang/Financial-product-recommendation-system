@@ -9,12 +9,14 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'algorithms'))
 
 from content_based import ContentBasedRecommender
 from decision_tree_recommender import DecisionTreeRecommender
+from large_model_recommender import LargeModelRecommender
 
 
 class FinancialRecommendationSystem:
     def __init__(self):
         self.decision_tree = DecisionTreeRecommender()
         self.content_based = ContentBasedRecommender()
+        self.large_model = LargeModelRecommender()
         self.model_trained = False
         self.training_summary = None
         self.occupation_choices = [
@@ -34,6 +36,32 @@ class FinancialRecommendationSystem:
             ('medium', '中等风险'),
             ('high', '高风险'),
         ]
+        self.investment_goal_choices = [
+            ('short_term', '短期(1年以内)'),
+            ('medium_term', '中期(1-5年)'),
+            ('long_term', '长期(5年以上)'),
+            ('retirement', '退休规划'),
+            ('education', '教育基金'),
+            ('house', '购房计划'),
+        ]
+        self.investment_experience_choices = [
+            ('beginner', '新手'),
+            ('intermediate', '有一定经验'),
+            ('advanced', '经验丰富'),
+            ('professional', '专业投资者'),
+        ]
+        self.investment_amount_choices = [
+            ('small', '小额(<5万)'),
+            ('medium', '中等(5-20万)'),
+            ('large', '大额(>20万)'),
+        ]
+        self.special_needs_choices = [
+            ('none', '无特殊需求'),
+            ('esg', 'ESG投资(环保、社会责任)'),
+            ('tax_efficient', '税务优惠产品'),
+            ('liquid', '高流动性需求'),
+            ('capital_preservation', '本金保障优先'),
+        ]
 
     def display_welcome(self):
         print("=" * 60)
@@ -46,21 +74,32 @@ class FinancialRecommendationSystem:
         print("=" * 60)
 
     def perform_training(self):
-        print("\n开始训练决策树模型...")
+        print("\n开始训练模型...")
+        print("  1. 训练决策树模型...")
         summary = self.decision_tree.train_model()
         if summary is None:
-            print("训练失败：数据不足或连接异常。")
-            self.model_trained = False
-            return
-
-        self.model_trained = True
+            print("决策树模型训练失败：数据不足或连接异常。")
+        else:
+            print("决策树模型训练完成 ✅")
+            print(f"  - 训练样本数: {summary['samples']}")
+            print(f"  - 偏好类型数: {summary['preferred_type_count']}")
+            print("  - 特征重要性:")
+            for feature, importance in summary['feature_importances'].items():
+                print(f"      · {feature}: {importance:.3f}")
+        
+        print("\n  2. 训练大模型推荐器...")
+        try:
+            large_model_summary = self.large_model.train_model()
+            if large_model_summary:
+                print("大模型推荐器训练完成 ✅")
+            else:
+                print("大模型推荐器训练未完成或失败")
+        except Exception as e:
+            print(f"大模型推荐器训练失败: {str(e)}")
+        
+        # 如果任一模型训练成功，我们就算模型已训练
+        self.model_trained = summary is not None
         self.training_summary = summary
-        print("训练完成 ✅")
-        print(f"  - 训练样本数: {summary['samples']}")
-        print(f"  - 偏好类型数: {summary['preferred_type_count']}")
-        print("  - 特征重要性:")
-        for feature, importance in summary['feature_importances'].items():
-            print(f"      · {feature}: {importance:.3f}")
 
     def _prompt_int(self, prompt, min_value, max_value):
         while True:
@@ -91,21 +130,33 @@ class FinancialRecommendationSystem:
         occupation = self._prompt_choice("  职业：", self.occupation_choices)
         income = self._prompt_choice("  收入水平：", self.income_choices)
         risk = self._prompt_choice("  风险偏好：", self.risk_choices)
+        
+        print("\n请填写更详细的财务信息以获得个性化建议：")
+        investment_goal = self._prompt_choice("  投资目标：", self.investment_goal_choices)
+        investment_experience = self._prompt_choice("  投资经验：", self.investment_experience_choices)
+        investment_amount = self._prompt_choice("  投资金额范围：", self.investment_amount_choices)
+        special_needs = self._prompt_choice("  特殊需求：", self.special_needs_choices)
+        
         return {
             'age': age,
             'occupation': occupation,
             'income_level': income,
-            'risk_tolerance': risk
+            'risk_tolerance': risk,
+            'investment_goal': investment_goal,
+            'investment_experience': investment_experience,
+            'investment_amount': investment_amount,
+            'special_needs': special_needs
         }
 
     def choose_algorithm(self):
         print("\n请选择推荐策略：")
         print("  1. 决策树推荐（基于训练模型）")
         print("  2. 基于内容推荐（画像匹配）")
-        print("  3. 双算法对比")
+        print("  3. 大模型个性化推荐（含专业建议）")
+        print("  4. 算法对比")
         while True:
-            choice = input("请输入 1/2/3: ").strip()
-            if choice in ['1', '2', '3']:
+            choice = input("请输入 1/2/3/4: ").strip()
+            if choice in ['1', '2', '3', '4']:
                 return choice
             print("输入无效，请重新选择。")
 
@@ -120,7 +171,7 @@ class FinancialRecommendationSystem:
                     return top_n
             print("请输入 1-10 之间的数字。")
 
-    def show_recommendations(self, title, recommendations):
+    def show_recommendations(self, title, recommendations, advice=None):
         print(f"\n{title}")
         print("-" * 40)
         if not recommendations:
@@ -134,18 +185,31 @@ class FinancialRecommendationSystem:
                 print(f"     匹配度: {rec['similarity']:.3f}")
             if 'reason' in rec:
                 print(f"     推荐理由: {rec['reason']}")
+        
+        # 如果有大模型建议，显示建议
+        if advice:
+            print(f"\n💡 个性化投资建议:")
+            print("=" * 40)
+            print(advice)
 
     def run_recommendations(self, choice, profile, top_n):
-        if choice in ['1', '3']:
+        if choice in ['1', '4']:  # 决策树推荐或对比
             if not self.model_trained:
                 print("\n请先完成模型训练，再使用决策树推荐。")
             else:
                 recs = self.decision_tree.recommend_for_profile(profile, top_n=top_n)
                 self.show_recommendations("【决策树推荐】", recs)
 
-        if choice in ['2', '3']:
+        if choice in ['2', '4']:  # 基于内容推荐或对比
             recs = self.content_based.recommend_for_profile(profile, top_n=top_n)
             self.show_recommendations("【基于内容推荐】", recs)
+        
+        if choice in ['3', '4']:  # 大模型推荐或对比
+            try:
+                result = self.large_model.recommend_with_advice(profile, top_n=top_n)
+                self.show_recommendations("【大模型个性化推荐】", result['recommendations'], result.get('advice', ''))
+            except Exception as e:
+                print(f"\n大模型推荐出错: {str(e)}")
 
     def run(self):
         self.display_welcome()

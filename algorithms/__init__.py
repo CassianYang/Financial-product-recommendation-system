@@ -1,9 +1,9 @@
-"""
-金融产品推荐系统 - 算法模块包
+from .content_based import ContentBasedRecommender
+from .decision_tree_recommender import DecisionTreeRecommender
+from .large_model_recommender import LargeModelRecommender
 
-该包包含多种推荐算法的实现：
-- 决策树推荐
-- 基于内容的推荐
-- 协同过滤推荐
-- Apriori关联规则推荐
-"""
+__all__ = [
+    'ContentBasedRecommender',
+    'DecisionTreeRecommender',
+    'LargeModelRecommender'
+]
