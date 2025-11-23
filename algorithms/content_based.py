@@ -1,7 +1,13 @@
-from database_utils import DatabaseManager
-from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.preprocessing import LabelEncoder
-import numpy as np
+import sys
+import os
+
+# 添加项目根目录到Python路径
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+try:
+    from .database_utils import DatabaseManager
+except ImportError:
+    from database_utils import DatabaseManager
 
 
 class ContentBasedRecommender:
@@ -111,7 +117,9 @@ class ContentBasedRecommender:
     def recommend_for_profile(self, user_data, top_n=5):
         """基于用户画像（年龄/职业等）生成推荐"""
         try:
+            print(f"开始基于用户画像生成推荐，top_n={top_n}")
             if user_data is None:
+                print("用户画像数据为空")
                 return []
             
             products_df, product_features = self.prepare_product_features()
@@ -136,7 +144,9 @@ class ContentBasedRecommender:
                 })
             
             recommendations.sort(key=lambda x: x['similarity'], reverse=True)
-            return recommendations[:top_n]
+            result = recommendations[:top_n]
+            print(f"基于内容推荐完成，返回 {len(result)} 个推荐")
+            return result
         except Exception as e:
             print(f"基于内容推荐出错: {e}")
             return []

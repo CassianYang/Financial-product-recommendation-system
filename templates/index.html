@@ -1,13 +1,27 @@
-<!-- templates/index.html -->
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>金融产品推荐系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #2e7d32;
+            --warning-color: #b8860b;
+            --error-color: #c62828;
+            --text-dark: #2c3e50;
+            --text-light: #7f8c8d;
+            --bg-light: #f8f9fa;
+            --border-color: #e0e0e0;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            --card-radius: 15px;
+            --transition: all 0.3s ease;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -15,59 +29,108 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: var(--primary-gradient);
             min-height: 100vh;
             padding: 20px;
             color: #333;
+            line-height: 1.6;
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
         }
 
-        .header {
+        /* 导航栏 */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: var(--card-radius);
+            padding: 15px 30px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-brand {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-link {
+            color: var(--text-dark);
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 25px;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        /* 主标题 */
+        .hero {
             text-align: center;
             background: rgba(255, 255, 255, 0.95);
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            padding: 40px;
+            border-radius: var(--card-radius);
+            box-shadow: var(--shadow);
             margin-bottom: 30px;
             position: relative;
             overflow: hidden;
+            animation: fadeInUp 0.8s ease;
         }
 
-        .header::before {
+        .hero::before {
             content: "";
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             height: 5px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
+            background: var(--primary-gradient);
         }
 
-        .header h1 {
-            color: #2c3e50;
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+        .hero h1 {
+            color: var(--text-dark);
+            font-size: 2.8rem;
+            margin-bottom: 15px;
             font-weight: 700;
         }
 
-        .header p {
-            color: #7f8c8d;
-            font-size: 1.2rem;
-            margin-bottom: 15px;
+        .hero p {
+            color: var(--text-light);
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
+        /* 卡片样式 */
         .card {
             background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
+            border-radius: var(--card-radius);
             padding: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            box-shadow: var(--shadow);
             margin-bottom: 30px;
-            transition: transform 0.3s ease;
+            transition: var(--transition);
+            animation: fadeIn 0.6s ease;
         }
 
         .card:hover {
@@ -75,43 +138,63 @@
         }
 
         .card-title {
-            font-size: 1.5rem;
-            color: #2c3e50;
-            margin-bottom: 20px;
+            font-size: 1.6rem;
+            color: var(--text-dark);
+            margin-bottom: 25px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            font-weight: 600;
         }
 
         .card-title i {
-            color: #667eea;
+            color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.1);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        /* 表单样式 */
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
         }
 
         .form-group {
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             font-weight: 600;
-            color: #2c3e50;
-            font-size: 1.1rem;
+            color: var(--text-dark);
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .input-control {
             width: 100%;
-            padding: 15px;
-            border: 2px solid #e0e0e0;
+            padding: 14px 16px;
+            border: 2px solid var(--border-color);
             border-radius: 10px;
             font-size: 1rem;
-            background-color: #fff;
-            transition: border-color 0.3s ease;
+            background-color: white;
+            transition: var(--transition);
         }
 
         .input-control:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
         }
 
@@ -119,7 +202,7 @@
             appearance: none;
             background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
             background-repeat: no-repeat;
-            background-position: right 15px center;
+            background-position: right 16px center;
             background-size: 15px;
         }
 
@@ -134,50 +217,56 @@
         }
 
         .btn {
-            display: inline-block;
-            padding: 15px 30px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px 35px;
+            background: var(--primary-gradient);
             color: white;
             border: none;
             border-radius: 10px;
             font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: var(--transition);
             width: 100%;
             text-transform: uppercase;
             letter-spacing: 1px;
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            gap: 10px;
         }
 
         .btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.6);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
         }
 
         .btn:active {
             transform: translateY(-1px);
         }
 
+        /* 状态徽章 */
         .status-badge {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 8px 15px;
-            border-radius: 999px;
+            gap: 10px;
+            padding: 10px 20px;
+            border-radius: 25px;
             font-weight: 600;
-            font-size: 0.95rem;
-            margin-bottom: 15px;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 400px;
         }
 
         .status-warning {
             background: rgba(255, 193, 7, 0.15);
-            color: #b8860b;
+            color: var(--warning-color);
         }
 
         .status-success {
             background: rgba(76, 175, 80, 0.15);
-            color: #2e7d32;
+            color: var(--success-color);
         }
 
         .status-info {
@@ -185,25 +274,33 @@
             color: #1565c0;
         }
 
+        /* 训练摘要 */
         .training-summary {
             background: #f6f8ff;
             border-radius: 10px;
-            padding: 15px;
-            margin-top: 10px;
+            padding: 20px;
+            margin-top: 15px;
+            animation: slideIn 0.5s ease;
         }
 
         .training-summary ul {
-            margin-top: 10px;
-            padding-left: 20px;
+            margin-top: 12px;
+            padding-left: 25px;
             color: #555;
         }
 
+        .training-summary li {
+            margin: 8px 0;
+        }
+
+        /* 推荐结果 */
         .results {
             background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
+            border-radius: var(--card-radius);
             padding: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            box-shadow: var(--shadow);
             margin-top: 30px;
+            animation: fadeIn 0.6s ease;
             display: none;
         }
 
@@ -211,305 +308,495 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #eee;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
         }
 
         .results-header h2 {
-            color: #2c3e50;
-            font-size: 1.8rem;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #7f8c8d;
-            transition: color 0.3s ease;
-        }
-
-        .close-btn:hover {
-            color: #e74c3c;
-        }
-
-        .algorithm-section {
-            margin-bottom: 30px;
-            padding: 20px;
-            border-radius: 10px;
-            background: #f8f9fa;
-            border-left: 4px solid #667eea;
-        }
-
-        .algorithm-name {
-            font-size: 1.3rem;
-            color: #2c3e50;
-            margin-bottom: 15px;
+            color: var(--text-dark);
+            font-size: 2rem;
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: var(--text-light);
+            transition: var(--transition);
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .close-btn:hover {
+            color: var(--error-color);
+            background: rgba(220, 20, 60, 0.1);
+        }
+
+        .algorithm-section {
+            margin-bottom: 35px;
+            padding: 25px;
+            border-radius: 10px;
+            background: var(--bg-light);
+            border-left: 5px solid var(--primary-color);
+            animation: slideIn 0.4s ease;
+        }
+
+        .algorithm-name {
+            font-size: 1.4rem;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+        }
+
         .product-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
         }
 
         .product {
             background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s ease;
-            border: 1px solid #eee;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            transition: var(--transition);
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .product::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary-gradient);
         }
 
         .product:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
         }
 
         .product h4 {
-            color: #2c3e50;
-            font-size: 1.2rem;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
+            color: var(--text-dark);
+            font-size: 1.25rem;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .product-info {
-            margin-bottom: 15px;
+            margin-bottom: 18px;
         }
 
         .product-info p {
-            margin: 8px 0;
+            margin: 10px 0;
             display: flex;
             justify-content: space-between;
+            align-items: center;
         }
 
         .info-label {
             font-weight: 600;
-            color: #7f8c8d;
+            color: var(--text-light);
+            font-size: 0.95rem;
         }
 
         .info-value {
-            color: #2c3e50;
+            color: var(--text-dark);
             font-weight: 500;
+            padding: 3px 8px;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 12px;
         }
 
         .no-results {
             text-align: center;
-            padding: 40px;
-            color: #7f8c8d;
+            padding: 60px 30px;
+            color: var(--text-light);
             font-style: italic;
+            font-size: 1.2rem;
+            grid-column: 1 / -1;
         }
 
+        /* 加载动画 */
         .loading {
             text-align: center;
-            padding: 40px;
+            padding: 60px 30px;
             display: none;
+            animation: fadeIn 0.4s ease;
         }
 
         .spinner {
             border: 4px solid rgba(0, 0, 0, 0.1);
             border-radius: 50%;
-            border-top: 4px solid #667eea;
-            width: 40px;
-            height: 40px;
+            border-top: 4px solid var(--primary-color);
+            width: 50px;
+            height: 50px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
+            margin: 0 auto 25px;
+        }
+
+        .loading p {
+            font-size: 1.1rem;
+            color: var(--text-dark);
         }
 
         @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .error-message {
             background: #ffebee;
-            color: #c62828;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
-            border-left: 4px solid #c62828;
+            color: var(--error-color);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 25px 0;
+            border-left: 5px solid var(--error-color);
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
+        /* 个性化建议样式 */
+        .advice-section {
+            background: linear-gradient(135deg, #e8f4fd 0%, #f0f9ff 100%);
+            border: 1px solid #2196f3;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .advice-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: var(--primary-gradient);
+        }
+
+        .advice-section h4 {
+            color: #0d47a1;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.2rem;
+        }
+
+        /* 动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* 页脚 */
         footer {
             text-align: center;
             color: rgba(255, 255, 255, 0.8);
-            margin-top: 30px;
-            font-size: 0.9rem;
+            margin-top: 40px;
+            font-size: 1rem;
+            padding: 20px;
         }
 
+        /* 响应式设计 */
         @media (max-width: 768px) {
             body {
-                padding: 10px;
+                padding: 15px;
             }
 
-            .header h1 {
-                font-size: 2rem;
+            .navbar {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+
+            .hero p {
+                font-size: 1.1rem;
+            }
+
+            .card, .results {
+                padding: 20px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
             }
 
             .product-grid {
                 grid-template-columns: 1fr;
             }
 
-            .card,
-            .results {
-                padding: 20px;
+            .results-header h2 {
+                font-size: 1.5rem;
             }
+        }
+
+        @media (max-width: 480px) {
+            .hero {
+                padding: 30px 20px;
+            }
+
+            .hero h1 {
+                font-size: 1.8rem;
+            }
+
+            .status-badge {
+                font-size: 0.9rem;
+                padding: 8px 15px;
+            }
+
+            .btn {
+                padding: 12px 25px;
+                font-size: 1rem;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
         }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <div class="header">
-            <h1><i class="fas fa-chart-line"></i> 金融产品推荐系统</h1>
-            <p>适合你的才是最好的————你的贴心投资管家</p>
+        <!-- 导航栏 -->
+        <div class="navbar">
+            <div class="nav-brand">
+                <i class="fas fa-chart-line"></i> 金融产品推荐系统
+            </div>
+            <div class="nav-links">
+                <a href="#home" class="nav-link active" onclick="scrollToSection('home')">
+                    <i class="fas fa-home"></i> 首页
+                </a>
+                <a href="#model" class="nav-link" onclick="scrollToSection('model-section')">
+                    <i class="fas fa-robot"></i> 模型
+                </a>
+                <a href="#profile" class="nav-link" onclick="scrollToSection('profile-section')">
+                    <i class="fas fa-user"></i> 用户画像
+                </a>
+                <a href="#results" class="nav-link" onclick="scrollToSection('results')">
+                    <i class="fas fa-chart-bar"></i> 结果
+                </a>
+            </div>
         </div>
 
-        <div class="card">
-            <h2 class="card-title"><i class="fas fa-robot"></i> 模型训练</h2>
+        <!-- 主标题 -->
+        <div id="home" class="hero">
+            <h1><i class="fas fa-chart-line"></i> 金融产品推荐系统</h1>
+            <p>基于大数据分析与智能算法，为您量身定制最适合的投资方案</p>
+            <p>智能匹配，风险控制，收益优化 —— 您的专属投资顾问</p>
+        </div>
+
+        <!-- 模型训练卡片 -->
+        <div id="model-section" class="card">
+            <h2 class="card-title"><i class="fas fa-robot"></i> 智能模型训练</h2>
             <p id="modelStatus" class="status-badge status-warning">
-                <i class="fas fa-circle-notch"></i> 模型尚未训练
+                <i class="fas fa-circle-notch fa-spin"></i> 模型尚未训练
             </p>
-            <p>点击下方按钮，基于数据库中的真实用户行为训练智能推荐模型。</p>
+            <p>点击下方按钮，基于数据库中的真实用户行为训练智能推荐模型。模型将分析您的投资偏好，提供更精准的推荐。</p>
             <button type="button" class="btn" onclick="trainModel()">
-                <i class="fas fa-cogs"></i> 训练模型
+                <i class="fas fa-cogs"></i> 开始训练模型
             </button>
             <div id="trainingSummary" class="training-summary" style="display:none;"></div>
         </div>
 
-        <div class="card">
-            <h2 class="card-title"><i class="fas fa-user-cog"></i> 用户画像设置</h2>
+        <!-- 用户画像卡片 -->
+        <div id="profile-section" class="card">
+            <h2 class="card-title"><i class="fas fa-user-cog"></i> 个人投资画像</h2>
             <form id="recommendationForm">
-                <div class="form-group">
-                    <label for="age"><i class="fas fa-birthday-cake"></i> 年龄</label>
-                    <input type="number" id="age" class="input-control" name="age" min="18" max="80" value="30"
-                        required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="age"><i class="fas fa-birthday-cake"></i> 年龄</label>
+                        <input type="number" id="age" class="input-control" name="age" min="18" max="80" value="30" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="occupation"><i class="fas fa-briefcase"></i> 职业</label>
+                        <select id="occupation" name="occupation" class="input-control">
+                            <option value="工程师">工程师</option>
+                            <option value="教师">教师</option>
+                            <option value="医生">医生</option>
+                            <option value="自由职业">自由职业</option>
+                            <option value="企业家">企业家</option>
+                            <option value="学生">学生</option>
+                            <option value="公务员">公务员</option>
+                            <option value="经理">经理</option>
+                            <option value="销售">销售</option>
+                            <option value="退休人员">退休人员</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="occupation"><i class="fas fa-briefcase"></i> 职业</label>
-                    <select id="occupation" name="occupation" class="input-control">
-                        <option value="工程师">工程师</option>
-                        <option value="教师">教师</option>
-                        <option value="医生">医生</option>
-                        <option value="自由职业">自由职业</option>
-                        <option value="企业家">企业家</option>
-                        <option value="学生">学生</option>
-                        <option value="公务员">公务员</option>
-                        <option value="经理">经理</option>
-                        <option value="销售">销售</option>
-                        <option value="退休人员">退休人员</option>
-                    </select>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="income_level"><i class="fas fa-yen-sign"></i> 收入水平</label>
+                        <select id="income_level" name="income_level" class="input-control">
+                            <option value="low">低收入 ( < 8K/月 )</option>
+                            <option value="medium" selected>中等收入 (8K-20K)</option>
+                            <option value="high">高收入 ( > 20K )</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="risk_tolerance"><i class="fas fa-shield-alt"></i> 风险偏好</label>
+                        <select id="risk_tolerance" name="risk_tolerance" class="input-control">
+                            <option value="low">低风险偏好</option>
+                            <option value="medium" selected>中等风险偏好</option>
+                            <option value="high">高风险偏好</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="income_level"><i class="fas fa-yen-sign"></i> 收入水平</label>
-                    <select id="income_level" name="income_level" class="input-control">
-                        <option value="low">低收入 ( < 8K/月 )</option>
-                        <option value="medium">中等收入 (8K-20K)</option>
-                        <option value="high">高收入 ( > 20K )</option>
-                    </select>
+                <!-- 扩展字段 -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="investment_goal"><i class="fas fa-bullseye"></i> 投资目标</label>
+                        <select id="investment_goal" name="investment_goal" class="input-control">
+                            <option value="short_term">短期(1年以内)</option>
+                            <option value="medium_term" selected>中期(1-5年)</option>
+                            <option value="long_term">长期(5年以上)</option>
+                            <option value="retirement">退休规划</option>
+                            <option value="education">教育基金</option>
+                            <option value="house">购房计划</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="investment_experience"><i class="fas fa-graduation-cap"></i> 投资经验</label>
+                        <select id="investment_experience" name="investment_experience" class="input-control">
+                            <option value="beginner">新手</option>
+                            <option value="intermediate" selected>有一定经验</option>
+                            <option value="advanced">经验丰富</option>
+                            <option value="professional">专业投资者</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="risk_tolerance"><i class="fas fa-shield-alt"></i> 风险偏好</label>
-                    <select id="risk_tolerance" name="risk_tolerance" class="input-control">
-                        <option value="low">低风险偏好</option>
-                        <option value="medium">中等风险偏好</option>
-                        <option value="high">高风险偏好</option>
-                    </select>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="investment_amount"><i class="fas fa-wallet"></i> 投资金额范围</label>
+                        <select id="investment_amount" name="investment_amount" class="input-control">
+                            <option value="small">小额(<5万)</option>
+                            <option value="medium" selected>中等(5-20万)</option>
+                            <option value="large">大额(>20万)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="special_needs"><i class="fas fa-heart"></i> 特殊需求</label>
+                        <select id="special_needs" name="special_needs" class="input-control">
+                            <option value="none">无特殊需求</option>
+                            <option value="esg">ESG投资(环保、社会责任)</option>
+                            <option value="tax_efficient">税务优惠产品</option>
+                            <option value="liquid">高流动性需求</option>
+                            <option value="capital_preservation">本金保障优先</option>
+                        </select>
+                    </div>
                 </div>
 
-                <!-- 新增扩展字段 -->
-                <div class="form-group">
-                    <label for="investment_goal"><i class="fas fa-bullseye"></i> 投资目标</label>
-                    <select id="investment_goal" name="investment_goal" class="input-control">
-                        <option value="short_term">短期(1年以内)</option>
-                        <option value="medium_term" selected>中期(1-5年)</option>
-                        <option value="long_term">长期(5年以上)</option>
-                        <option value="retirement">退休规划</option>
-                        <option value="education">教育基金</option>
-                        <option value="house">购房计划</option>
-                    </select>
-                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="algorithm"><i class="fas fa-brain"></i> 推荐策略</label>
+                        <select id="algorithm" name="algorithm" class="input-control">
+                            <option value="decision_tree">决策树推荐（基于训练模型）</option>
+                            <option value="content">基于内容推荐（画像匹配）</option>
+                            <option value="apriori">关联规则推荐（购买关联）</option>
+                            <option value="collaborative">协同过滤推荐（用户相似性）</option>
+                            <option value="large_model">大模型个性化推荐</option>
+                            <option value="all">算法对比（全部算法）</option>
+                        </select>
+                    </div>
 
-                <div class="form-group">
-                    <label for="investment_experience"><i class="fas fa-graduation-cap"></i> 投资经验</label>
-                    <select id="investment_experience" name="investment_experience" class="input-control">
-                        <option value="beginner">新手</option>
-                        <option value="intermediate" selected>有一定经验</option>
-                        <option value="advanced">经验丰富</option>
-                        <option value="professional">专业投资者</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="investment_amount"><i class="fas fa-wallet"></i> 投资金额范围</label>
-                    <select id="investment_amount" name="investment_amount" class="input-control">
-                        <option value="small">小额(<5万)</option>
-                        <option value="medium" selected>中等(5-20万)</option>
-                        <option value="large">大额(>20万)</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="special_needs"><i class="fas fa-heart"></i> 特殊需求</label>
-                    <select id="special_needs" name="special_needs" class="input-control">
-                        <option value="none">无特殊需求</option>
-                        <option value="esg">ESG投资(环保、社会责任)</option>
-                        <option value="tax_efficient">税务优惠产品</option>
-                        <option value="liquid">高流动性需求</option>
-                        <option value="capital_preservation">本金保障优先</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="algorithm"><i class="fas fa-brain"></i> 推荐策略</label>
-                    <select id="algorithm" name="algorithm" class="input-control">
-                        <option value="decision_tree">决策树推荐（基于训练模型）</option>
-                        <option value="content">基于内容推荐（画像匹配）</option>
-                        <option value="large_model">大模型个性化推荐</option>
-                        <option value="all">算法对比（全部算法）</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="top_n"><i class="fas fa-list-ol"></i> 推荐数量</label>
-                    <input type="number" id="top_n" name="top_n" class="input-control" min="1" max="10" value="5">
+                    <div class="form-group">
+                        <label for="top_n"><i class="fas fa-list-ol"></i> 推荐数量</label>
+                        <input type="number" id="top_n" name="top_n" class="input-control" min="1" max="10" value="5">
+                    </div>
                 </div>
 
                 <button type="button" class="btn" onclick="getRecommendations()">
-                    <i class="fas fa-search"></i> 个性化推荐
+                    <i class="fas fa-search"></i> 获取个性化推荐
                 </button>
             </form>
         </div>
 
+        <!-- 加载动画 -->
         <div class="loading" id="loading">
             <div class="spinner"></div>
-            <p>正在为您计算最优推荐，请稍候...</p>
+            <p><i class="fas fa-sync-alt fa-spin"></i> 正在为您计算最优推荐，请稍候...</p>
         </div>
 
+        <!-- 推荐结果 -->
         <div id="results" class="results">
             <div class="results-header">
-                <h2><i class="fas fa-star"></i> 推荐结果</h2>
-                <button class="close-btn" onclick="closeResults()">&times;</button>
+                <h2><i class="fas fa-star"></i> 智能推荐结果</h2>
+                <button class="close-btn" onclick="closeResults()">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div id="resultsContent"></div>
         </div>
 
         <footer>
             <p>© 2025 金融产品推荐系统 | 电商金融小组作业</p>
+            <p>智能投资，科学理财，助您财富增值</p>
         </footer>
     </div>
 
@@ -521,6 +808,23 @@
             income_level: '收入水平',
             risk_tolerance: '风险偏好'
         };
+
+        // 滚动到指定区域
+        function scrollToSection(sectionId) {
+            const element = document.getElementById(sectionId);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+                // 更新导航链接状态
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.classList.remove('active');
+                });
+                const activeLink = Array.from(document.querySelectorAll('.nav-link')).find(link => 
+                    link.getAttribute('href').includes(sectionId.replace('-section', ''))
+                );
+                if (activeLink) activeLink.classList.add('active');
+            }
+        }
 
         function updateModelStatus(text, statusClass) {
             const statusEl = document.getElementById('modelStatus');
@@ -538,19 +842,24 @@
             }
             const importance = summary.feature_importances || {};
             const listItems = Object.entries(importance)
-                .map(([key, value]) => `<li>${featureNameMap[key] || key}: ${(value * 100).toFixed(1)}%</li>`)
+                .sort((a, b) => b[1] - a[1]) // 按重要性排序
+                .map(([key, value]) => {
+                    const displayName = featureNameMap[key] || key;
+                    return `<li><strong>${displayName}:</strong> ${(value * 100).toFixed(1)}%</li>`;
+                })
                 .join('');
             container.innerHTML = `
-                <p>训练样本数：${summary.samples}</p>
-                <p>主要产品类型数：${summary.preferred_type_count}</p>
-                <p>特征重要性：</p>
+                <h4><i class="fas fa-chart-pie"></i> 训练摘要</h4>
+                <p><strong>📊 训练样本数：</strong>${summary.samples}</p>
+                <p><strong>🏷️ 主要产品类型数：</strong>${summary.preferred_type_count}</p>
+                <p><strong>🎯 特征重要性分析：</strong></p>
                 <ul>${listItems || '<li>暂无数据</li>'}</ul>
             `;
             container.style.display = 'block';
         }
 
         function trainModel() {
-            updateModelStatus('模型训练中，请稍候...', 'status-info');
+            updateModelStatus('🧠 模型训练中，请稍候...', 'status-info');
             showTrainingSummary(null);
 
             fetch('/train-model', { method: 'POST' })
@@ -558,17 +867,19 @@
                 .then(data => {
                     if (data.success) {
                         modelReady = true;
-                        updateModelStatus('模型训练完成，可开始推荐', 'status-success');
+                        updateModelStatus('✅ 模型训练完成，可开始推荐', 'status-success');
                         showTrainingSummary(data.summary);
+                        // 自动滚动到用户画像部分
+                        setTimeout(() => scrollToSection('profile-section'), 1000);
                     } else {
                         modelReady = false;
-                        updateModelStatus(data.error || '训练失败，请重试', 'status-warning');
+                        updateModelStatus(data.error || '❌ 训练失败，请重试', 'status-warning');
                     }
                 })
                 .catch(error => {
                     console.error(error);
                     modelReady = false;
-                    updateModelStatus('训练失败，请检查后台日志', 'status-warning');
+                    updateModelStatus('❌ 训练失败，请检查后台日志', 'status-warning');
                 });
         }
 
@@ -586,6 +897,7 @@
 
             if ((algorithm === 'decision_tree' || algorithm === 'all') && !modelReady) {
                 alert('请先训练模型，再使用决策树相关推荐。');
+                scrollToSection('model-section');
                 return;
             }
 
@@ -626,6 +938,7 @@
                             </div>
                         `;
                         document.getElementById('results').style.display = 'block';
+                        scrollToSection('results');
                         return;
                     }
 
@@ -650,6 +963,7 @@
 
                     resultsContent.innerHTML = html;
                     document.getElementById('results').style.display = 'block';
+                    scrollToSection('results');
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -660,6 +974,7 @@
                         </div>
                     `;
                     document.getElementById('results').style.display = 'block';
+                    scrollToSection('results');
                 });
         }
 
@@ -674,11 +989,9 @@
             // 如果有大模型建议，先显示建议
             if (advice) {
                 section += `
-                    <div class="advice-section" style="background: #e8f4fd; border: 1px solid #2196f3; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
-                        <h4 style="color: #0d47a1; margin-top: 0; display: flex; align-items: center; gap: 10px;">
-                            <i class="fas fa-lightbulb"></i> 个性化投资建议
-                        </h4>
-                        <div style="white-space: pre-line; line-height: 1.6;">${advice}</div>
+                    <div class="advice-section">
+                        <h4><i class="fas fa-lightbulb"></i> 个性化投资建议</h4>
+                        <div style="white-space: pre-line; line-height: 1.7;">${advice}</div>
                     </div>
                 `;
             }
@@ -686,12 +999,14 @@
             if (!recommendations || recommendations.length === 0) {
                 section += `
                     <div class="no-results">
-                        <i class="fas fa-info-circle"></i> 暂无推荐产品
+                        <i class="fas fa-inbox"></i>
+                        <h3>暂无推荐产品</h3>
+                        <p>没有找到符合您条件的金融产品</p>
                     </div>
                 `;
             } else {
                 section += '<div class="product-grid">';
-                recommendations.forEach(rec => {
+                recommendations.forEach((rec, index) => {
                     if (rec.error) {
                         section += `
                             <div class="error-message">
@@ -700,7 +1015,7 @@
                         `;
                         return;
                     }
-                    section += generateProductCard(rec);
+                    section += generateProductCard(rec, index + 1);
                 });
                 section += '</div>';
             }
@@ -708,43 +1023,57 @@
             return section;
         }
 
-        function generateProductCard(rec) {
+        function generateProductCard(rec, rank) {
             const expectedReturn = rec.expected_return !== undefined ? `
                 <p>
-                    <span class="info-label">预期收益:</span>
+                    <span class="info-label">📈 预期收益:</span>
                     <span class="info-value">${rec.expected_return}%</span>
                 </p>` : '';
             const scoreBlock = rec.score !== undefined ? `
                 <p>
-                    <span class="info-label">推荐度:</span>
+                    <span class="info-label">⭐ 推荐度:</span>
                     <span class="info-value">${Number(rec.score).toFixed(3)}</span>
                 </p>` : '';
             const ratingBlock = rec.predicted_rating !== undefined ? `
                 <p>
-                    <span class="info-label">预测评分:</span>
+                    <span class="info-label">📊 预测评分:</span>
                     <span class="info-value">${Number(rec.predicted_rating).toFixed(2)}</span>
                 </p>` : '';
             const similarityBlock = rec.similarity !== undefined ? `
                 <p>
-                    <span class="info-label">匹配度:</span>
+                    <span class="info-label">🎯 匹配度:</span>
                     <span class="info-value">${Number(rec.similarity).toFixed(3)}</span>
                 </p>` : '';
             const reasonBlock = rec.reason ? `
                 <p>
-                    <span class="info-label">推荐原因:</span>
+                    <span class="info-label">💡 推荐原因:</span>
                     <span class="info-value">${rec.reason}</span>
                 </p>` : '';
 
+            // 根据排名设置不同的样式
+            const rankColors = {
+                1: '#FFD700', // 金牌
+                2: '#C0C0C0', // 银牌
+                3: '#CD7F32'  // 铜牌
+            };
+            const rankColor = rankColors[rank] || '#808080';
+
             return `
                 <div class="product">
-                    <h4><i class="fas fa-money-bill-wave"></i> ${rec.product_name}</h4>
+                    <h4>
+                        <i class="fas fa-money-bill-wave"></i> 
+                        ${rec.product_name}
+                        <span style="float: right; color: ${rankColor}; font-size: 1.2rem;">
+                            <i class="fas fa-medal"></i> #${rank}
+                        </span>
+                    </h4>
                     <div class="product-info">
                         <p>
-                            <span class="info-label">产品类型:</span>
+                            <span class="info-label">📋 产品类型:</span>
                             <span class="info-value">${rec.product_type}</span>
                         </p>
                         <p>
-                            <span class="info-label">风险等级:</span>
+                            <span class="info-label">🛡️ 风险等级:</span>
                             <span class="info-value">${rec.risk_level}</span>
                         </p>
                         ${scoreBlock}
@@ -760,7 +1089,36 @@
         function closeResults() {
             document.getElementById('results').style.display = 'none';
         }
+
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 添加滚动监听，更新导航状态
+            window.addEventListener('scroll', function() {
+                const sections = ['home', 'model-section', 'profile-section', 'results'];
+                const navLinks = document.querySelectorAll('.nav-link');
+                
+                let currentSection = 'home';
+                
+                for (const sectionId of sections) {
+                    const element = document.getElementById(sectionId);
+                    if (element) {
+                        const rect = element.getBoundingClientRect();
+                        if (rect.top <= 100 && rect.bottom >= 100) {
+                            currentSection = sectionId.replace('-section', '');
+                            break;
+                        }
+                    }
+                }
+                
+                navLinks.forEach(link => {
+                    if (link.getAttribute('href').includes(currentSection)) {
+                        link.classList.add('active');
+                    } else {
+                        link.classList.remove('active');
+                    }
+                });
+            });
+        });
     </script>
 </body>
-
 </html>

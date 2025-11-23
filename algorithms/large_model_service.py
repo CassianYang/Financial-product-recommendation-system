@@ -2,14 +2,10 @@ import os
 import openai
 from dotenv import load_dotenv
 from typing import Dict, List, Optional
-import logging
+import requests
 
 # 加载环境变量
 load_dotenv()
-
-# 配置日志
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 class LargeModelService:
@@ -19,16 +15,30 @@ class LargeModelService:
     
     def __init__(self):
         # 从环境变量获取API密钥
-        self.api_key = os.getenv('OPENAI_API_KEY')
-        self.base_url = os.getenv('OPENAI_BASE_URL', 'https://api.openai.com/v1')
-        self.model = os.getenv('LLM_MODEL', 'gpt-3.5-turbo')
+        self.api_key = os.getenv('OPENAI_API_KEY', 'ollama')  # 默认使用 ollama 作为API密钥占位符
+        self.base_url = os.getenv('OPENAI_BASE_URL', 'http://localhost:11434/v1')  # 默认Ollama地址
+        self.model = os.getenv('LLM_MODEL', 'qwen2:0.5b')  # 使用小型模型进行演示
         
-        if self.api_key:
+        # 检测是否使用Ollama
+        self.is_ollama = '11434' in self.base_url or os.getenv('USE_OLLAMA', '').lower() == 'true'
+        
+        if self.is_ollama:
+            # Ollama 不需要真正的 API 密钥，但需要设置为非空值
+            openai.api_key = "ollama"
+            # 为Ollama调整API基础URL
+            if self.base_url.endswith('/v1'):
+                self.ollama_base_url = self.base_url[:-3]  # 移除 /v1 后缀
+            else:
+                self.ollama_base_url = self.base_url
+            openai.base_url = self.base_url
+            print(f"配置为使用 Ollama 服务: {self.base_url}")
+        elif self.api_key:
             openai.api_key = self.api_key
             if self.base_url:
                 openai.base_url = self.base_url
+            print(f"配置为使用 OpenAI 兼容服务: {self.base_url}")
         else:
-            logger.warning("未找到API密钥，将使用模拟响应")
+            print("未找到API密钥，将使用模拟响应")
     
     def generate_financial_advice(self, user_profile: Dict, recommendations: List[Dict]) -> str:
         """
@@ -48,29 +58,70 @@ class LargeModelService:
             # 构建提示词
             prompt = self._build_financial_prompt(user_profile, recommendations)
             
-            # 调用大模型API
-            response = openai.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {
-                        "role": "system", 
-                        "content": "你是一位专业的金融理财顾问，擅长根据用户画像和金融产品特点提供个性化的投资建议。"
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-                max_tokens=500,
-                temperature=0.7
-            )
-            
-            return response.choices[0].message.content.strip()
+            if self.is_ollama:
+                # 使用Ollama API
+                return self._call_ollama_api(prompt)
+            else:
+                # 使用OpenAI兼容API
+                response = openai.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {
+                            "role": "system", 
+                            "content": "你是一位专业的金融理财顾问，擅长根据用户画像和金融产品特点提供个性化的投资建议。"
+                        },
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ],
+                    max_tokens=500,
+                    temperature=0.7
+                )
+                
+                return response.choices[0].message.content.strip()
         
         except Exception as e:
-            logger.error(f"大模型API调用失败: {str(e)}")
+            print(f"大模型API调用失败: {str(e)}")
             # 发生错误时返回模拟响应
             return self._generate_mock_advice(user_profile, recommendations)
+    
+    def _call_ollama_api(self, prompt: str) -> str:
+        """
+        调用Ollama API
+        """
+        import json
+        
+        # 构建Ollama API请求
+        url = f"{self.ollama_base_url.rstrip('/')}/api/chat"
+        payload = {
+            "model": self.model,
+            "messages": [
+                {
+                    "role": "system", 
+                    "content": "你是一位专业的金融理财顾问，擅长根据用户画像和金融产品特点提供个性化的投资建议。"
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            "stream": False,
+            "options": {
+                "temperature": 0.7,
+                "num_predict": 500
+            }
+        }
+        
+        headers = {
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.post(url, json=payload, headers=headers)
+        response.raise_for_status()
+        
+        result = response.json()
+        return result["message"]["content"].strip()
     
     def _build_financial_prompt(self, user_profile: Dict, recommendations: List[Dict]) -> str:
         """

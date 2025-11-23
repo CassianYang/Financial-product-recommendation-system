@@ -5,11 +5,15 @@ from flask import Flask, render_template, request, jsonify
 import sys
 import os
 
+# 添加项目根目录和algorithms目录到Python路径
+sys.path.append(os.path.dirname(__file__))
 sys.path.append(os.path.join(os.path.dirname(__file__), 'algorithms'))
   
 from content_based import ContentBasedRecommender
 from decision_tree_recommender import DecisionTreeRecommender
 from large_model_recommender import LargeModelRecommender
+from apriori_recommender import AprioriRecommender
+from collaborative_filtering import CollaborativeFiltering
 import numpy as np
 
 app = Flask(__name__)
@@ -18,11 +22,15 @@ app = Flask(__name__)
 decision_tree_recommender = DecisionTreeRecommender()
 content_recommender = ContentBasedRecommender()
 large_model_recommender = LargeModelRecommender()
+apriori_recommender = AprioriRecommender()
+collaborative_filtering = CollaborativeFiltering()
 
 profile_recommenders = {
     'decision_tree': ('决策树推荐', decision_tree_recommender),
     'content': ('基于内容推荐', content_recommender),
-    'large_model': ('大模型推荐', large_model_recommender)
+    'large_model': ('大模型推荐', large_model_recommender),
+    'apriori': ('关联规则推荐', apriori_recommender),
+    'collaborative': ('协同过滤推荐', collaborative_filtering)
 }
 
 model_trained = False
@@ -38,17 +46,21 @@ def train_model():
     """训练决策树模型"""
     global model_trained, training_summary
     try:
+        print("开始训练模型")
         summary = decision_tree_recommender.train_model()
         if summary is None:
             model_trained = False
             training_summary = None
+            error_msg = '没有足够的历史数据用于训练，请检查数据库。'
+            print(error_msg)
             return jsonify({
                 'success': False,
-                'error': '没有足够的历史数据用于训练，请检查数据库。'
+                'error': error_msg
             })
         
         model_trained = True
         training_summary = summary
+        print(f"模型训练完成，样本数: {summary['samples']}")
         return jsonify({
             'success': True,
             'summary': summary
@@ -93,6 +105,16 @@ def run_recommender(algo_key, user_profile, top_n):
     if algo_key == 'large_model':
         result = recommender.recommend_with_advice(user_profile, top_n=top_n)
         return algo_name, serialize_recommendations(result['recommendations']), result.get('advice', '')
+    # 特殊处理关联规则推荐器和协同过滤推荐器
+    elif algo_key in ['apriori', 'collaborative']:
+        # 对于关联规则和协同过滤，需要用户ID，而不是用户画像
+        # 使用默认用户ID或从用户画像中获取ID
+        user_id = user_profile.get('user_id', 1)  # 默认使用用户ID 1
+        if algo_key == 'apriori':
+            recommendations = recommender.recommend_for_user(user_id, top_n=top_n)
+        else:  # collaborative
+            recommendations = recommender.recommend_for_user(user_id, top_n=top_n, k=2)  # k参数只对协同过滤有效
+        return algo_name, serialize_recommendations(recommendations), None
     else:
         recommendations = recommender.recommend_for_profile(user_profile, top_n=top_n)
         return algo_name, serialize_recommendations(recommendations), None
@@ -108,21 +130,27 @@ def recommend():
         user_profile = data.get('user_profile')
         
         if not user_profile:
-            return jsonify({'success': False, 'error': '缺少用户画像数据'})
+            error_msg = '缺少用户画像数据'
+            print(error_msg)
+            return jsonify({'success': False, 'error': error_msg})
         
         # 对于大模型推荐，我们不需要强制要求基础字段，因为可能有其他扩展字段
         if algorithm != 'large_model':
             required_fields = ['age', 'occupation', 'income_level', 'risk_tolerance']
             missing_fields = [field for field in required_fields if field not in user_profile]
             if missing_fields:
-                return jsonify({'success': False, 'error': f"缺少字段: {', '.join(missing_fields)}"})
+                error_msg = f"缺少字段: {', '.join(missing_fields)}"
+                print(error_msg)
+                return jsonify({'success': False, 'error': error_msg})
         
         # 确保年龄为整数（如果提供了年龄）
         if 'age' in user_profile:
             try:
                 user_profile['age'] = int(user_profile['age'])
             except (ValueError, TypeError):
-                return jsonify({'success': False, 'error': '年龄必须为数字'})
+                error_msg = '年龄必须为数字'
+                print(error_msg)
+                return jsonify({'success': False, 'error': error_msg})
         
         print(f"收到推荐请求: 算法{algorithm}, 特征{user_profile}, 数量{top_n}")
         
@@ -182,5 +210,5 @@ def recommend():
 
 if __name__ == '__main__':
     print("启动金融产品推荐系统Web服务...")
-    print("访问地址: http://127.0.0.1:5000")
-    app.run(debug=True)
+    print("访问地址: http://127.0.0.1:5002")
+    app.run(debug=True, port=5002)

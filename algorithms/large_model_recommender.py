@@ -1,6 +1,11 @@
-from large_model_service import large_model_service
-from decision_tree_recommender import DecisionTreeRecommender
-from content_based import ContentBasedRecommender
+try:
+    from .large_model_service import large_model_service
+    from .decision_tree_recommender import DecisionTreeRecommender
+    from .content_based import ContentBasedRecommender
+except ImportError:
+    from large_model_service import large_model_service
+    from decision_tree_recommender import DecisionTreeRecommender
+    from content_based import ContentBasedRecommender
 import logging
 
 # 配置日志
@@ -30,7 +35,7 @@ class LargeModelRecommender:
                 return result
             return None
         except Exception as e:
-            logger.error(f"训练大模型推荐器的内部模型失败: {str(e)}")
+            print(f"训练大模型推荐器的内部模型失败: {str(e)}")
             return None
     
     def recommend_with_advice(self, user_profile: dict, top_n: int = 5, algorithm: str = 'decision_tree'):
@@ -81,7 +86,7 @@ class LargeModelRecommender:
             }
             
         except Exception as e:
-            logger.error(f"大模型推荐器出错: {str(e)}")
+            print(f"大模型推荐器出错: {str(e)}")
             raise e
 
     def recommend_for_profile(self, user_profile: dict, top_n: int = 5):

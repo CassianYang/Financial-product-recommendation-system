@@ -4,7 +4,8 @@
 import sys
 import os
 
-# 添加 algorithms 目录到 Python 路径，这样可以直接导入算法模块
+# 添加项目根目录和algorithms目录到Python路径
+sys.path.append(os.path.dirname(__file__))
 sys.path.append(os.path.join(os.path.dirname(__file__), 'algorithms'))
 
 from content_based import ContentBasedRecommender
