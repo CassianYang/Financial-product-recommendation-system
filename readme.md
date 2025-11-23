@@ -17,22 +17,36 @@
 
 ```
 Financial-product-recommendation-system/
-├── app.py              # Web界面主程序
-├── main.py             # 控制台模式主程序
-├── generate_large_data.py  # 数据生成脚本
-├── readme.md           # 项目文档
-├── algorithms/         # 推荐算法模块
-│   ├── decision_tree_recommender.py  # 决策树推荐器
-│   ├── content_based.py              # 基于内容推荐器
-│   ├── collaborative_filtering.py    # 协同过滤推荐器
-│   ├── apriori_recommender.py        # Apriori关联规则推荐器
-│   ├── database_utils.py             # 数据库工具
-│   └── create_database.py            # 数据库创建脚本
-├── data/               # 数据存储目录
-│   └── financial_data.db             # SQLite数据库
-├── templates/          # Web模板
-│   └── index.html      # 主页面模板
-└── .venv/              # Python虚拟环境
+├── app.py                    # Web界面主程序
+├── main.py                   # 控制台模式主程序
+├── generate_large_data.py    # 数据生成脚本
+├── requirements.txt          # 项目依赖
+├── readme.md                 # 项目说明文档
+├── LICENSE                   # 许可证文件
+├── .gitignore               # Git忽略文件配置
+├── docs/                    # 文档目录
+│   ├── README.md            # 文档说明
+│   ├── CRM——上机报告2025.doc # 上机报告文档
+│   ├── flowcharts/          # 流程图目录
+│   │   ├── apriori_flowchart_improved.png          # Apriori算法流程图
+│   │   ├── collaborative_filtering_flowchart_improved.png # 协同过滤算法流程图
+│   │   ├── content_based_flowchart_improved.png         # 基于内容算法流程图
+│   │   ├── decision_tree_flowchart_improved.png         # 决策树算法流程图
+│   │   └── combined_flowchart_improved.png              # 组合算法流程图
+│   └── architecture.md      # 系统架构说明
+├── venv/                    # Python虚拟环境
+├── data/                    # 数据存储目录
+│   └── financial_data.db    # SQLite数据库文件
+├── algorithms/              # 推荐算法模块目录
+│   ├── __init__.py          # 模块初始化文件
+│   ├── apriori_recommender.py          # Apriori关联规则推荐算法
+│   ├── collaborative_filtering.py      # 协同过滤推荐算法
+│   ├── content_based.py                # 基于内容推荐算法
+│   ├── decision_tree_recommender.py    # 决策树推荐算法
+│   ├── database_utils.py               # 数据库工具类
+│   └── create_database.py              # 数据库创建脚本
+└── templates/               # Web模板目录
+    └── index.html           # 主页面模板
 ```
 
 ## 技术栈
@@ -60,20 +74,15 @@ cd Financial-product-recommendation-system
 
 2. 创建并激活虚拟环境：
 ```bash
-python -m venv .venv
-source .venv/bin/activate  # Linux/Mac
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
 # 或
-.venv\Scripts\activate     # Windows
+venv\Scripts\activate     # Windows
 ```
 
 3. 安装依赖包：
 ```bash
 pip install -r requirements.txt
-```
-
-如果项目中没有 requirements.txt 文件，需要安装以下依赖：
-```bash
-pip install flask pandas numpy scikit-learn sqlite3
 ```
 
 4. 初始化数据库：
@@ -134,6 +143,7 @@ python generate_large_data.py
 
 ### Web界面API
 - `GET /` - 首页
+- `POST /train-model` - 训练模型
 - `POST /recommend` - 获取推荐结果
 - `POST /add_behavior` - 添加用户行为数据
 
@@ -147,6 +157,14 @@ python generate_large_data.py
 - **实时推荐**: 支持基于用户实时行为的推荐
 - **Web界面**: 提供友好的交互界面
 - **模块化设计**: 算法模块化，便于扩展和维护
+
+## 系统架构
+
+详细架构说明请参见 [docs/architecture.md](docs/architecture.md)。
+
+## 推荐算法流程图
+
+算法流程图请参见 [docs/flowcharts/](docs/flowcharts/) 目录。
 
 ## 开发约定
 
